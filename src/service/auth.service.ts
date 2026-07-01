@@ -15,6 +15,7 @@ export async function registrarEstudiante(
   nombreCompleto: string,
   institucion: string,
   grado: string,
+  fotoUri?: string,
 ) {
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -28,7 +29,15 @@ export async function registrarEstudiante(
       },
     },
   });
+
   if (error) throw error;
+  if (!data.user) throw new Error("No se pudo crear el usuario");
+
+  if (fotoUri) {
+    const fotoUrl = await subirAvatar(data.user.id, fotoUri);
+    await actualizarFotoUrl(data.user.id, fotoUrl);
+  }
+
   return data;
 }
 
@@ -44,5 +53,39 @@ export async function obtenerPerfil(userId: string) {
 
 export async function cerrarSesion() {
   const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
+
+export async function subirAvatar(
+  userId: string,
+  fotoUri: string,
+): Promise<string> {
+  const extension = fotoUri.split(".").pop()?.toLowerCase() || "jpg";
+  const filePath = `${userId}/avatar.${extension}`;
+  const contentType = `image/${extension === "jpg" ? "jpeg" : extension}`;
+
+  const response = await fetch(fotoUri);
+  const arrayBuffer = await response.arrayBuffer();
+
+  const { error: uploadError } = await supabase.storage
+    .from("avatars")
+    .upload(filePath, arrayBuffer, {
+      contentType: contentType,
+      upsert: true,
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+  return data.publicUrl;
+}
+
+export async function actualizarFotoUrl(userId: string, fotoUrl: string) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ foto_url: fotoUrl })
+    .eq("id", userId);
+
   if (error) throw error;
 }

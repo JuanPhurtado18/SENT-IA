@@ -2,16 +2,16 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { registrarEstudiante } from "../../service/auth.service";
@@ -20,7 +20,7 @@ const GRADOS = ["6°", "7°", "8°", "9°", "10°", "11°"];
 
 export default function RegistroPaso2Screen() {
   const router = useRouter();
-  const { nombreCompleto, email } = useLocalSearchParams<{
+  const { nombreCompleto, email, fotoUri } = useLocalSearchParams<{
     nombreCompleto: string;
     email: string;
     fotoUri: string;
@@ -62,6 +62,7 @@ export default function RegistroPaso2Screen() {
         nombreCompleto,
         institucion,
         grado,
+        fotoUri || undefined,
       );
       Alert.alert("¡Cuenta creada!", "Tu cuenta fue creada exitosamente.", [
         { text: "Ingresar", onPress: () => router.replace("/(auth)/login") },
