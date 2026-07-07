@@ -3,16 +3,16 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 
@@ -149,18 +149,6 @@ export default function RegistroPaso1Screen() {
             value={email}
             onChangeText={setEmail}
           />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Soy</Text>
-          <View style={styles.rolContainer}>
-            <Text style={styles.rolText}>Estudiante</Text>
-            <MaterialCommunityIcons
-              name="lock-outline"
-              size={16}
-              color={Colors.grisMedio}
-            />
-          </View>
         </View>
 
         <TouchableOpacity
