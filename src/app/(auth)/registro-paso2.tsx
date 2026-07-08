@@ -14,7 +14,8 @@ import {
   View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
-import { registrarEstudiante } from "../../service/auth.service";
+import { cerrarSesion, registrarEstudiante } from "../../service/auth.service";
+import { useAuthStore } from "../../store/authStore";
 
 const GRADOS = ["6°", "7°", "8°", "9°", "10°", "11°"];
 
@@ -33,6 +34,7 @@ export default function RegistroPaso2Screen() {
   const [institucion, setInstitucion] = useState("");
   const [grado, setGrado] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { setIsRegistering } = useAuthStore();
 
   async function handleRegistrar() {
     if (!password || !confirmPassword || !institucion || !grado) {
@@ -55,6 +57,8 @@ export default function RegistroPaso2Screen() {
     }
 
     setIsLoading(true);
+    setIsRegistering(true);
+
     try {
       await registrarEstudiante(
         email,
@@ -64,10 +68,15 @@ export default function RegistroPaso2Screen() {
         grado,
         fotoUri || undefined,
       );
-      Alert.alert("¡Cuenta creada!", "Tu cuenta fue creada exitosamente.", [
-        { text: "Ingresar", onPress: () => router.replace("/(auth)/login") },
-      ]);
+      await cerrarSesion();
+      setIsRegistering(false);
+      router.replace("/(auth)/login");
+      Alert.alert(
+        "¡Cuenta creada!",
+        "Tu cuenta fue creada exitosamente. Inicia sesión para continuar.",
+      );
     } catch (error: any) {
+      setIsRegistering(false);
       Alert.alert("Error al registrarse", error.message || "Intenta de nuevo.");
     } finally {
       setIsLoading(false);

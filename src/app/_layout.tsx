@@ -23,8 +23,15 @@ export default function RootLayout() {
     Poppins_700Bold,
   });
 
-  const { session, role, isLoading, setSession, setRole, setIsLoading } =
-    useAuthStore();
+  const {
+    session,
+    role,
+    isLoading,
+    isRegistering,
+    setSession,
+    setRole,
+    setIsLoading,
+  } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
 
@@ -33,16 +40,15 @@ export default function RootLayout() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log("AUTH EVENT:", event, "Session existe:", !!newSession);
+      if (useAuthStore.getState().isRegistering) return;
+
       setSession(newSession);
 
       if (newSession?.user) {
         try {
           const profile = await obtenerPerfil(newSession.user.id);
-          console.log("PROFILE OBTENIDO:", profile);
           setRole(profile.role as "estudiante" | "docente");
-        } catch (err) {
-          console.log("ERROR AL OBTENER PERFIL:", err);
+        } catch {
           setRole(null);
         }
       } else {
@@ -83,7 +89,7 @@ export default function RootLayout() {
         router.replace("/(student)");
       }
     }
-  }, [session, role, isLoading, fontsLoaded, segments]);
+  }, [session, role, isLoading, fontsLoaded, isRegistering, segments]);
 
   // Oculta splash cuando las fuentes estén listas
   useEffect(() => {
