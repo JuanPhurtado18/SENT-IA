@@ -2,16 +2,16 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { iniciarSesion } from "../../service/auth.service";
@@ -102,7 +102,10 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.forgotPassword}>
+        <TouchableOpacity
+          style={styles.forgotPassword}
+          onPress={() => router.push("/(auth)/recuperar-password")}
+        >
           <Text style={styles.forgotPasswordText}>
             ¿Olvidaste tu contraseña?
           </Text>

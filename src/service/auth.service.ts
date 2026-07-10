@@ -89,3 +89,17 @@ export async function actualizarFotoUrl(userId: string, fotoUrl: string) {
 
   if (error) throw error;
 }
+
+export async function enviarEmailRecuperacion(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: "sentia://recuperar-password",
+  });
+  if (error) throw error;
+}
+
+export async function actualizarPassword(nuevaPassword: string) {
+  const { error } = await supabase.auth.updateUser({
+    password: nuevaPassword,
+  });
+  if (error) throw error;
+}

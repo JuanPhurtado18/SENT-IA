@@ -7,11 +7,11 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { Linking } from "react-native";
 import "react-native-reanimated";
 import { supabase } from "../lib/supabase";
 import { obtenerPerfil } from "../service/auth.service";
 import { useAuthStore } from "../store/authStore";
-
 export { ErrorBoundary } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
@@ -96,6 +96,24 @@ export default function RootLayout() {
     if (fontError) throw fontError;
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    // Maneja el deep link cuando la app ya está abierta
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      if (url.includes("recuperar-password")) {
+        router.push("/(auth)/nueva-password");
+      }
+    });
+
+    // Maneja el deep link cuando la app estaba cerrada
+    Linking.getInitialURL().then((url) => {
+      if (url && url.includes("recuperar-password")) {
+        router.push("/(auth)/nueva-password");
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   if (!fontsLoaded || isLoading) return null;
 
