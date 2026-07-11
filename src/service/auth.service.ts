@@ -103,3 +103,35 @@ export async function actualizarPassword(nuevaPassword: string) {
   });
   if (error) throw error;
 }
+
+export async function registrarEstadoEmocional(
+  usuarioId: string,
+  estado: number,
+) {
+  const hoy = new Date().toISOString().split("T")[0];
+
+  const { error } = await supabase
+    .from("registro_emocional")
+    .upsert(
+      { usuario_id: usuarioId, estado, fecha: hoy },
+      { onConflict: "usuario_id,fecha" },
+    );
+
+  if (error) throw error;
+}
+
+export async function obtenerEstadoEmocionalHoy(
+  usuarioId: string,
+): Promise<number | null> {
+  const hoy = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabase
+    .from("registro_emocional")
+    .select("estado")
+    .eq("usuario_id", usuarioId)
+    .eq("fecha", hoy)
+    .single();
+
+  if (error) return null;
+  return data.estado;
+}
