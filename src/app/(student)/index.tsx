@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+
 import {
   ActivityIndicator,
   ScrollView,
@@ -41,9 +42,11 @@ export default function StudentHomeScreen() {
   const [estadoEmocional, setEstadoEmocional] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (session?.user) cargarDatos();
-  }, [session]);
+  useFocusEffect(
+    useCallback(() => {
+      if (session?.user) cargarDatos();
+    }, [session]),
+  );
 
   async function cargarDatos() {
     setIsLoading(true);
