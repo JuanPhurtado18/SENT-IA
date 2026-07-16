@@ -113,3 +113,36 @@ export async function guardarRespuesta(
 
   if (error) throw error;
 }
+
+export async function obtenerResumenActividad(
+  usuarioId: string,
+  actividadId: string,
+) {
+  const { data: situaciones, error: errorSit } = await supabase
+    .from("situaciones")
+    .select("id")
+    .eq("actividad_id", actividadId);
+
+  if (errorSit || !situaciones) return null;
+
+  const situacionIds = situaciones.map((s) => s.id);
+
+  const { data: respuestas, error: errorResp } = await supabase
+    .from("respuestas")
+    .select("tiempo_respuesta_segundos")
+    .eq("usuario_id", usuarioId)
+    .in("situacion_id", situacionIds);
+
+  if (errorResp || !respuestas) return null;
+
+  const tiempoTotalSegundos = respuestas.reduce(
+    (acc, r) => acc + r.tiempo_respuesta_segundos,
+    0,
+  );
+
+  return {
+    situacionesRespondidas: respuestas.length,
+    totalSituaciones: situaciones.length,
+    tiempoTotalSegundos,
+  };
+}
