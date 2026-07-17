@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import CambiarPasswordModal from "../../components/student/CambiarPasswordModal";
+import EditarPerfilModal from "../../components/student/EditarPerfilModal";
 import { Colors } from "../../constants/Colors";
 import {
   contarActividadesCompletadas,
@@ -27,6 +28,7 @@ export default function PerfilScreen() {
   const [actividadesCompletadas, setActividadesCompletadas] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showEditarModal, setShowEditarModal] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -42,6 +44,7 @@ export default function PerfilScreen() {
         obtenerHistorialActividades(session!.user.id),
         contarActividadesCompletadas(session!.user.id),
       ]);
+      console.log("FOTO URL:", perfilData?.foto_url);
       setPerfil(perfilData);
       setHistorial(historialData);
       setActividadesCompletadas(completadas);
@@ -81,6 +84,10 @@ export default function PerfilScreen() {
     );
   }
 
+  if (!session?.user) {
+    return null;
+  }
+
   const inicialNombre = perfil?.nombre_completo?.[0]?.toUpperCase() || "E";
 
   return (
@@ -91,14 +98,35 @@ export default function PerfilScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* HEADER */}
-        <Text style={styles.headerTitulo}>Mi perfil</Text>
+        {/* HEADER */}
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitulo}>Mi perfil</Text>
+          <TouchableOpacity
+            style={styles.editarButton}
+            onPress={() => setShowEditarModal(true)}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons
+              name="pencil-outline"
+              size={20}
+              color={Colors.azulPrincipal}
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* AVATAR Y DATOS PRINCIPALES */}
         <View style={styles.avatarSection}>
           {perfil?.foto_url ? (
             <Image
-              source={{ uri: perfil.foto_url }}
+              source={{ uri: perfil.foto_url, cache: "reload" }}
               style={styles.avatarImagen}
+              onLoad={() => console.log("IMAGEN CARGADA CORRECTAMENTE")}
+              onError={(e) =>
+                console.log(
+                  "ERROR CARGANDO IMAGEN COMPLETO:",
+                  JSON.stringify(e.nativeEvent),
+                )
+              }
             />
           ) : (
             <View style={styles.avatarCircle}>
@@ -253,6 +281,14 @@ export default function PerfilScreen() {
         visible={showModal}
         onClose={() => setShowModal(false)}
       />
+      <EditarPerfilModal
+        visible={showEditarModal}
+        onClose={() => setShowEditarModal(false)}
+        onGuardado={cargarDatos}
+        nombreActual={perfil?.nombre_completo || ""}
+        fotoActual={perfil?.foto_url || null}
+        userId={session!.user.id}
+      />
     </>
   );
 }
@@ -278,6 +314,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: "Poppins_700Bold",
     color: Colors.grisOscuro,
+    flex: 1,
   },
   avatarSection: {
     alignItems: "center",
@@ -427,5 +464,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Poppins_600SemiBold",
     color: Colors.grisOscuro,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  editarButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: Colors.azulClaro,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

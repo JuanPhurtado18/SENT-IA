@@ -56,31 +56,43 @@ export async function cerrarSesion() {
   if (error) throw error;
 }
 
+import * as FileSystem from "expo-file-system/legacy";
+
 export async function subirAvatar(
   userId: string,
   fotoUri: string,
 ): Promise<string> {
-  const extension = fotoUri.split(".").pop()?.toLowerCase() || "jpg";
-  const filePath = `${userId}/avatar.${extension}`;
-  const contentType = `image/${extension === "jpg" ? "jpeg" : extension}`;
+  const filePath = `${userId}/avatar.jpg`;
 
-  const response = await fetch(fotoUri);
-  const arrayBuffer = await response.arrayBuffer();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) throw new Error("No hay sesión activa");
 
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(filePath, arrayBuffer, {
-      contentType: contentType,
-      upsert: true,
-    });
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const uploadUrl = `${supabaseUrl}/storage/v1/object/avatars/${filePath}`;
 
-  if (uploadError) throw uploadError;
+  const uploadResult = await FileSystem.uploadAsync(uploadUrl, fotoUri, {
+    httpMethod: "POST",
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "image/jpeg",
+      "x-upsert": "true",
+    },
+  });
+
+  console.log("Upload status:", uploadResult.status);
+  console.log("Upload body:", uploadResult.body);
+
+  if (uploadResult.status !== 200 && uploadResult.status !== 201) {
+    throw new Error(`Error subiendo imagen: ${uploadResult.body}`);
+  }
 
   const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-  return data.publicUrl;
+  return `${data.publicUrl}?t=${Date.now()}`;
 }
-
 export async function actualizarFotoUrl(userId: string, fotoUrl: string) {
   const { error } = await supabase
     .from("profiles")
@@ -159,6 +171,29 @@ export async function cambiarPassword(
   const { error } = await supabase.auth.updateUser({
     password: passwordNueva,
   });
+
+  if (error) throw error;
+}
+
+export async function actualizarPerfil(
+  userId: string,
+  nombreCompleto: string,
+  fotoUri?: string,
+) {
+  // Si hay foto nueva, subirla primero
+  let fotoUrl: string | undefined;
+  if (fotoUri) {
+    fotoUrl = await subirAvatar(userId, fotoUri);
+  }
+
+  // Actualizar el perfil con los datos nuevos
+  const updates: Record<string, string> = { nombre_completo: nombreCompleto };
+  if (fotoUrl) updates.foto_url = fotoUrl;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update(updates)
+    .eq("id", userId);
 
   if (error) throw error;
 }
