@@ -258,7 +258,7 @@ export default function StudentHomeScreen() {
               <View
                 style={[
                   styles.historialBadge,
-                  item.respuestas?.length >= 10
+                  item.totalRespuestas >= 10
                     ? styles.badgeCompletada
                     : styles.badgePendiente,
                 ]}
@@ -266,12 +266,12 @@ export default function StudentHomeScreen() {
                 <Text
                   style={[
                     styles.historialBadgeText,
-                    item.respuestas?.length >= 10
+                    item.totalRespuestas >= 10
                       ? styles.badgeCompletadaText
                       : styles.badgePendienteText,
                   ]}
                 >
-                  {item.respuestas?.length >= 10 ? "Completada" : "Pendiente"}
+                  {item.totalRespuestas >= 10 ? "Completada" : "Pendiente"}
                 </Text>
               </View>
             </View>

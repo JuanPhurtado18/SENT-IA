@@ -12,23 +12,60 @@ export async function obtenerActividadActiva() {
 }
 
 export async function obtenerHistorialActividades(usuarioId: string) {
-  const { data, error } = await supabase
+  // Primero obtenemos los IDs de situaciones que el estudiante respondió
+  const { data: respuestas, error: errorResp } = await supabase
+    .from("respuestas")
+    .select("situacion_id")
+    .eq("usuario_id", usuarioId);
+
+  if (errorResp || !respuestas || respuestas.length === 0) return [];
+
+  const situacionIds = respuestas.map((r) => r.situacion_id);
+
+  // Obtenemos las situaciones para saber a qué actividades pertenecen
+  const { data: situaciones, error: errorSit } = await supabase
+    .from("situaciones")
+    .select("actividad_id")
+    .in("id", situacionIds);
+
+  if (errorSit || !situaciones) return [];
+
+  // IDs únicos de actividades respondidas
+  const actividadIds = [...new Set(situaciones.map((s) => s.actividad_id))];
+
+  // Obtenemos las actividades con conteo de respuestas por cada una
+  const { data: actividades, error: errorAct } = await supabase
     .from("actividades")
-    .select(
-      `
-      id,
-      numero_semana,
-      anio,
-      estado,
-      respuestas!inner(usuario_id)
-    `,
-    )
-    .eq("respuestas.usuario_id", usuarioId)
+    .select("id, numero_semana, anio, estado")
+    .in("id", actividadIds)
     .order("numero_semana", { ascending: false })
     .limit(10);
 
-  if (error) return [];
-  return data;
+  if (errorAct || !actividades) return [];
+
+  // Para cada actividad calculamos cuántas situaciones respondió el estudiante
+  const actividadesConConteo = await Promise.all(
+    actividades.map(async (actividad) => {
+      const { data: sits } = await supabase
+        .from("situaciones")
+        .select("id")
+        .eq("actividad_id", actividad.id);
+
+      if (!sits) return { ...actividad, totalRespuestas: 0 };
+
+      const sitsIds = sits.map((s) => s.id);
+
+      const { count } = await supabase
+        .from("respuestas")
+        .select("id", { count: "exact" })
+        .eq("usuario_id", usuarioId)
+        .in("situacion_id", sitsIds);
+
+      return { ...actividad, totalRespuestas: count || 0 };
+    }),
+  );
+
+  return actividadesConConteo;
 }
 
 export async function contarRespuestasDeActividad(
@@ -145,4 +182,43 @@ export async function obtenerResumenActividad(
     totalSituaciones: situaciones.length,
     tiempoTotalSegundos,
   };
+}
+
+export async function obtenerTodasLasActividades(usuarioId: string) {
+  const { data: actividades, error } = await supabase
+    .from("actividades")
+    .select("id, numero_semana, anio, fecha_publicacion, fecha_cierre, estado")
+    .eq("anio", 2026)
+    .order("numero_semana", { ascending: true });
+
+  if (error || !actividades) return [];
+
+  // Para cada actividad, verificar si el estudiante ya la completó
+  const actividadesConEstado = await Promise.all(
+    actividades.map(async (actividad) => {
+      const { data: situaciones } = await supabase
+        .from("situaciones")
+        .select("id")
+        .eq("actividad_id", actividad.id);
+
+      if (!situaciones || situaciones.length === 0) {
+        return { ...actividad, completada: false, respuestasCount: 0 };
+      }
+
+      const situacionIds = situaciones.map((s) => s.id);
+
+      const { count } = await supabase
+        .from("respuestas")
+        .select("id", { count: "exact" })
+        .eq("usuario_id", usuarioId)
+        .in("situacion_id", situacionIds);
+
+      const respuestasCount = count || 0;
+      const completada = respuestasCount >= 10;
+
+      return { ...actividad, completada, respuestasCount };
+    }),
+  );
+
+  return actividadesConEstado;
 }
