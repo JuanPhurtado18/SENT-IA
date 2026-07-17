@@ -135,3 +135,30 @@ export async function obtenerEstadoEmocionalHoy(
   if (error) return null;
   return data.estado;
 }
+
+export async function cambiarPassword(
+  passwordActual: string,
+  passwordNueva: string,
+) {
+  // Supabase no tiene un endpoint directo para verificar la contraseña actual
+  // La forma correcta es re-autenticar al usuario con su email y contraseña actual
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) throw new Error("No se pudo obtener el usuario actual");
+
+  // Verificamos la contraseña actual intentando un signIn
+  const { error: errorVerificacion } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: passwordActual,
+  });
+
+  if (errorVerificacion) throw new Error("La contraseña actual es incorrecta");
+
+  // Si la verificación pasó, actualizamos la contraseña
+  const { error } = await supabase.auth.updateUser({
+    password: passwordNueva,
+  });
+
+  if (error) throw error;
+}

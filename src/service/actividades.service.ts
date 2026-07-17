@@ -204,3 +204,37 @@ export async function obtenerTodasLasActividades(usuarioId: string) {
 
   return actividadesConEstado;
 }
+
+export async function contarActividadesCompletadas(
+  usuarioId: string,
+): Promise<number> {
+  const { data: actividades, error } = await supabase
+    .from("actividades")
+    .select("id")
+    .eq("anio", 2026);
+
+  if (error || !actividades) return 0;
+
+  let completadas = 0;
+
+  for (const actividad of actividades) {
+    const { data: sits } = await supabase
+      .from("situaciones")
+      .select("id")
+      .eq("actividad_id", actividad.id);
+
+    if (!sits || sits.length === 0) continue;
+
+    const sitsIds = sits.map((s) => s.id);
+
+    const { count } = await supabase
+      .from("respuestas")
+      .select("id", { count: "exact" })
+      .eq("usuario_id", usuarioId)
+      .in("situacion_id", sitsIds);
+
+    if ((count || 0) >= 10) completadas++;
+  }
+
+  return completadas;
+}
