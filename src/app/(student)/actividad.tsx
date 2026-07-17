@@ -121,6 +121,15 @@ export default function ActividadScreen() {
 
   async function handleSeleccionarOpcion(opcion: string) {
     const situacionActual = situaciones[indexActual];
+
+    if (!situacionActual) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.azulPrincipal} />
+          <Text style={styles.loadingText}>Cargando situación...</Text>
+        </View>
+      );
+    }
     const tiempoSegundos = Math.floor(
       (Date.now() - tiempoInicioRef.current) / 1000,
     );

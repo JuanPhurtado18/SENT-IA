@@ -271,7 +271,11 @@ export default function StudentHomeScreen() {
                       : styles.badgePendienteText,
                   ]}
                 >
-                  {item.totalRespuestas >= 10 ? "Completada" : "Pendiente"}
+                  {item.totalRespuestas >= 10
+                    ? "Completada"
+                    : item.estado === "activa"
+                      ? "Por realizar"
+                      : "Incompleta"}
                 </Text>
               </View>
             </View>

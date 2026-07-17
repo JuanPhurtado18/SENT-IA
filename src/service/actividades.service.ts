@@ -5,45 +5,23 @@ export async function obtenerActividadActiva() {
     .from("actividades")
     .select("id, numero_semana, anio, fecha_cierre, estado")
     .eq("estado", "activa")
-    .single();
+    .order("numero_semana", { ascending: true })
+    .limit(1);
 
-  if (error) return null;
-  return data;
+  if (error || !data || data.length === 0) return null;
+  return data[0];
 }
 
 export async function obtenerHistorialActividades(usuarioId: string) {
-  // Primero obtenemos los IDs de situaciones que el estudiante respondió
-  const { data: respuestas, error: errorResp } = await supabase
-    .from("respuestas")
-    .select("situacion_id")
-    .eq("usuario_id", usuarioId);
-
-  if (errorResp || !respuestas || respuestas.length === 0) return [];
-
-  const situacionIds = respuestas.map((r) => r.situacion_id);
-
-  // Obtenemos las situaciones para saber a qué actividades pertenecen
-  const { data: situaciones, error: errorSit } = await supabase
-    .from("situaciones")
-    .select("actividad_id")
-    .in("id", situacionIds);
-
-  if (errorSit || !situaciones) return [];
-
-  // IDs únicos de actividades respondidas
-  const actividadIds = [...new Set(situaciones.map((s) => s.actividad_id))];
-
-  // Obtenemos las actividades con conteo de respuestas por cada una
   const { data: actividades, error: errorAct } = await supabase
     .from("actividades")
     .select("id, numero_semana, anio, estado")
-    .in("id", actividadIds)
+    .eq("anio", 2026)
     .order("numero_semana", { ascending: false })
     .limit(10);
 
   if (errorAct || !actividades) return [];
 
-  // Para cada actividad calculamos cuántas situaciones respondió el estudiante
   const actividadesConConteo = await Promise.all(
     actividades.map(async (actividad) => {
       const { data: sits } = await supabase
@@ -51,7 +29,9 @@ export async function obtenerHistorialActividades(usuarioId: string) {
         .select("id")
         .eq("actividad_id", actividad.id);
 
-      if (!sits) return { ...actividad, totalRespuestas: 0 };
+      if (!sits || sits.length === 0) {
+        return { ...actividad, totalRespuestas: 0 };
+      }
 
       const sitsIds = sits.map((s) => s.id);
 
@@ -65,7 +45,9 @@ export async function obtenerHistorialActividades(usuarioId: string) {
     }),
   );
 
-  return actividadesConConteo;
+  return actividadesConConteo.filter(
+    (a) => a.estado === "activa" || a.totalRespuestas > 0,
+  );
 }
 
 export async function contarRespuestasDeActividad(
