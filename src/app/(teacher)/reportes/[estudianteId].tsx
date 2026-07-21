@@ -2,25 +2,26 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Colors } from "../../../constants/Colors";
+import { obtenerPerfil } from "../../../service/auth.service";
 import {
-    contarActividadesCompletadasEstudiante,
-    guardarObservacion,
-    obtenerObservacion,
-    obtenerPerfilEstudiante,
+  contarActividadesCompletadasEstudiante,
+  guardarObservacion,
+  obtenerObservacion,
+  obtenerPerfilEstudiante,
 } from "../../../service/docente.service";
+import { exportarReportePDF } from "../../../service/pdf.service";
 import { useAuthStore } from "../../../store/authStore";
-
 // Datos de prueba hardcodeados hasta que el módulo de IA esté listo
 const INDICADORES_PRUEBA = [
   {
@@ -94,6 +95,8 @@ export default function ReporteIndividualScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGuardando, setIsGuardando] = useState(false);
   const [observacionEditada, setObservacionEditada] = useState(false);
+  const [isExportando, setIsExportando] = useState(false);
+  const [perfilDocente, setPerfilDocente] = useState<any>(null);
 
   useEffect(() => {
     if (estudianteId && session?.user) cargarDatos();
@@ -102,16 +105,19 @@ export default function ReporteIndividualScreen() {
   async function cargarDatos() {
     setIsLoading(true);
     try {
-      const [perfilData, completadas, observacionData] = await Promise.all([
-        obtenerPerfilEstudiante(estudianteId),
-        contarActividadesCompletadasEstudiante(estudianteId),
-        obtenerObservacion(estudianteId, session!.user.id),
-      ]);
+      const [perfilData, completadas, observacionData, perfilDocenteData] =
+        await Promise.all([
+          obtenerPerfilEstudiante(estudianteId),
+          contarActividadesCompletadasEstudiante(estudianteId),
+          obtenerObservacion(estudianteId, session!.user.id),
+          obtenerPerfil(session!.user.id),
+        ]);
 
       setPerfil(perfilData);
       setActividadesCompletadas(completadas);
       setObservacion(observacionData);
       setTextoObservacion(observacionData?.texto || "");
+      setPerfilDocente(perfilDocenteData);
     } catch (error) {
       console.log("Error cargando reporte:", error);
     } finally {
@@ -162,6 +168,39 @@ export default function ReporteIndividualScreen() {
   const nivelConfig = NIVEL_ALERTA_CONFIG[nivelGeneral];
   const inicialNombre = perfil.nombre_completo?.[0]?.toUpperCase() || "E";
   const alturaMaxBarra = 80;
+
+  async function handleExportarPDF() {
+    if (!perfil) return;
+
+    setIsExportando(true);
+    try {
+      await exportarReportePDF({
+        nombreEstudiante: perfil.nombre_completo,
+        grado: perfil.grado,
+        institucion: perfil.institucion,
+        actividadesCompletadas,
+        nivelGeneral: calcularNivelGeneral(INDICADORES_PRUEBA),
+        indicadores: INDICADORES_PRUEBA.map((ind) => ({
+          area: ind.area,
+          nivel: ind.nivel,
+          puntuacion: ind.puntuacion,
+          color: ind.color,
+        })),
+        tendencia: TENDENCIA_PRUEBA,
+        observacion: textoObservacion,
+        nombreDocente: perfilDocente?.nombre_completo || "Docente",
+        fechaReporte: new Date().toLocaleDateString("es-CO", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+      });
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "No se pudo generar el PDF.");
+    } finally {
+      setIsExportando(false);
+    }
+  }
 
   return (
     <ScrollView
@@ -376,21 +415,26 @@ export default function ReporteIndividualScreen() {
 
       {/* BOTÓN EXPORTAR PDF */}
       <TouchableOpacity
-        style={styles.exportarButton}
-        onPress={() =>
-          Alert.alert(
-            "Próximamente",
-            "La exportación de PDF estará disponible cuando el módulo de IA esté activo.",
-          )
-        }
+        style={[
+          styles.exportarButton,
+          isExportando && styles.exportarButtonDisabled,
+        ]}
+        onPress={handleExportarPDF}
+        disabled={isExportando}
         activeOpacity={0.8}
       >
-        <MaterialCommunityIcons
-          name="file-pdf-box"
-          size={20}
-          color={Colors.blanco}
-        />
-        <Text style={styles.exportarButtonTexto}>Exportar reporte PDF</Text>
+        {isExportando ? (
+          <ActivityIndicator color={Colors.blanco} size="small" />
+        ) : (
+          <>
+            <MaterialCommunityIcons
+              name="file-pdf-box"
+              size={20}
+              color={Colors.blanco}
+            />
+            <Text style={styles.exportarButtonTexto}>Exportar reporte PDF</Text>
+          </>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -643,6 +687,11 @@ const styles = StyleSheet.create({
     color: Colors.blanco,
     fontSize: 14,
     fontFamily: "Poppins_600SemiBold",
+  },
+
+  exportarButtonDisabled: {
+    opacity: 0.7,
+    elevation: 0,
   },
   exportarButton: {
     flexDirection: "row",
