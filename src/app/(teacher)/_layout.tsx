@@ -75,6 +75,12 @@ export default function TeacherLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="reportes/[estudianteId]"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

@@ -114,3 +114,95 @@ export async function obtenerTodosLosEstudiantes() {
 
   return estudiantesConEstado;
 }
+
+export async function buscarEstudiantes(query: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, nombre_completo, grado, institucion, foto_url")
+    .eq("role", "estudiante")
+    .ilike("nombre_completo", `%${query}%`)
+    .order("nombre_completo", { ascending: true })
+    .limit(10);
+
+  if (error || !data) return [];
+  return data;
+}
+
+export async function obtenerPerfilEstudiante(estudianteId: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, nombre_completo, grado, institucion, foto_url")
+    .eq("id", estudianteId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function contarActividadesCompletadasEstudiante(
+  estudianteId: string,
+): Promise<number> {
+  const { data: actividades } = await supabase
+    .from("actividades")
+    .select("id")
+    .eq("anio", 2026);
+
+  if (!actividades) return 0;
+
+  let completadas = 0;
+  for (const actividad of actividades) {
+    const { data: sits } = await supabase
+      .from("situaciones")
+      .select("id")
+      .eq("actividad_id", actividad.id);
+
+    if (!sits || sits.length === 0) continue;
+
+    const sitsIds = sits.map((s) => s.id);
+    const { count } = await supabase
+      .from("respuestas")
+      .select("id", { count: "exact" })
+      .eq("usuario_id", estudianteId)
+      .in("situacion_id", sitsIds);
+
+    if ((count || 0) >= 10) completadas++;
+  }
+
+  return completadas;
+}
+
+export async function obtenerObservacion(
+  estudianteId: string,
+  docenteId: string,
+) {
+  const { data, error } = await supabase
+    .from("observaciones")
+    .select("id, texto, updated_at")
+    .eq("estudiante_id", estudianteId)
+    .eq("docente_id", docenteId)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (error || !data || data.length === 0) return null;
+  return data[0];
+}
+
+export async function guardarObservacion(
+  estudianteId: string,
+  docenteId: string,
+  texto: string,
+  observacionId?: string,
+) {
+  if (observacionId) {
+    const { error } = await supabase
+      .from("observaciones")
+      .update({ texto, updated_at: new Date().toISOString() })
+      .eq("id", observacionId);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("observaciones")
+      .insert({ estudiante_id: estudianteId, docente_id: docenteId, texto });
+    if (error) throw error;
+  }
+}
