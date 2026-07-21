@@ -16,59 +16,9 @@ import { useAuthStore } from "../../store/authStore";
 
 // Datos de prueba hardcodeados para alertas y indicadores
 // Se reemplazarán cuando el módulo de IA esté listo
-const ALERTAS_PRUEBA = [
-  {
-    id: "1",
-    tipo: "prioritaria",
-    nombre: "Juan Pérez",
-    descripcion: "3 semanas consecutivas con indicadores críticos",
-    color: Colors.rojoAlerta,
-    fondo: "#FFEBEB",
-    icono: "alert-circle" as const,
-  },
-  {
-    id: "2",
-    tipo: "seguimiento",
-    nombre: "María García",
-    descripcion: "Área familiar · Semana 2",
-    color: Colors.naranjaAlerta,
-    fondo: "#FFF3E0",
-    icono: "alert" as const,
-  },
-];
+const ALERTAS_PRUEBA: any[] = [];
 
-const INDICADORES_PRUEBA = [
-  {
-    area: "Área escolar",
-    nivel: "Estable",
-    color: Colors.verdePrincipal,
-    progreso: 0.85,
-  },
-  {
-    area: "Área familiar",
-    nivel: "Observación",
-    color: Colors.naranjaAlerta,
-    progreso: 0.55,
-  },
-  {
-    area: "Área personal",
-    nivel: "Estable",
-    color: Colors.verdePrincipal,
-    progreso: 0.78,
-  },
-  {
-    area: "Área social",
-    nivel: "Seguimiento",
-    color: Colors.rojoAlerta,
-    progreso: 0.35,
-  },
-  {
-    area: "Área afectiva",
-    nivel: "Estable",
-    color: Colors.verdePrincipal,
-    progreso: 0.8,
-  },
-];
+const INDICADORES_PRUEBA: any[] = [];
 
 const NIVEL_COLORS: Record<string, string> = {
   Estable: Colors.verdePrincipal,
@@ -239,46 +189,55 @@ export default function TeacherDashboard() {
       {/* INDICADORES DEL GRUPO */}
       <View style={styles.seccion}>
         <Text style={styles.seccionTitulo}>INDICADORES DEL GRUPO</Text>
-        <View style={styles.indicadoresCard}>
-          {INDICADORES_PRUEBA.map((indicador, index) => (
-            <View key={indicador.area}>
-              <View style={styles.indicadorItem}>
-                <Text style={styles.indicadorArea}>{indicador.area}</Text>
-                <View style={styles.indicadorBarraContainer}>
-                  <View style={styles.indicadorBarra}>
+        {INDICADORES_PRUEBA.length === 0 ? (
+          <View style={styles.sinDatosCard}>
+            <Text style={styles.sinDatosTexto}>
+              Los indicadores estarán disponibles cuando el módulo de IA esté
+              activo.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.indicadoresCard}>
+            {INDICADORES_PRUEBA.map((indicador, index) => (
+              <View key={indicador.area}>
+                <View style={styles.indicadorItem}>
+                  <Text style={styles.indicadorArea}>{indicador.area}</Text>
+                  <View style={styles.indicadorBarraContainer}>
+                    <View style={styles.indicadorBarra}>
+                      <View
+                        style={[
+                          styles.indicadorBarraFill,
+                          {
+                            width: `${indicador.progreso * 100}%`,
+                            backgroundColor: indicador.color,
+                          },
+                        ]}
+                      />
+                    </View>
                     <View
                       style={[
-                        styles.indicadorBarraFill,
-                        {
-                          width: `${indicador.progreso * 100}%`,
-                          backgroundColor: indicador.color,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <View
-                    style={[
-                      styles.nivelBadge,
-                      { backgroundColor: NIVEL_FONDOS[indicador.nivel] },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.nivelBadgeTexto,
-                        { color: NIVEL_COLORS[indicador.nivel] },
+                        styles.nivelBadge,
+                        { backgroundColor: NIVEL_FONDOS[indicador.nivel] },
                       ]}
                     >
-                      {indicador.nivel}
-                    </Text>
+                      <Text
+                        style={[
+                          styles.nivelBadgeTexto,
+                          { color: NIVEL_COLORS[indicador.nivel] },
+                        ]}
+                      >
+                        {indicador.nivel}
+                      </Text>
+                    </View>
                   </View>
                 </View>
+                {index < INDICADORES_PRUEBA.length - 1 && (
+                  <View style={styles.separador} />
+                )}
               </View>
-              {index < INDICADORES_PRUEBA.length - 1 && (
-                <View style={styles.separador} />
-              )}
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
       </View>
     </ScrollView>
   );
