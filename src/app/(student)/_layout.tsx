@@ -68,6 +68,12 @@ export default function StudentLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="finalizacion"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
