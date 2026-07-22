@@ -1,3 +1,4 @@
+import LoadingScreen from "@/src/components/ui/LoadingScreen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -154,13 +155,7 @@ export default function ReporteIndividualScreen() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-      </View>
-    );
-  }
+  if (isLoading) return <LoadingScreen mensaje="Cargando reporte..." />;
 
   if (!session?.user || !perfil) return null;
 

@@ -1,3 +1,4 @@
+import LoadingScreen from "@/src/components/ui/LoadingScreen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -179,24 +180,10 @@ export default function ActividadScreen() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-        <Text style={styles.loadingText}>Cargando actividad...</Text>
-      </View>
-    );
-  }
+  if (isLoading) return <LoadingScreen mensaje="Cargando tu perfil..." />;
 
-  if (isProcesando) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-        <Text style={styles.loadingText}>Guardando tus respuestas...</Text>
-        <Text style={styles.loadingSubtext}>Esto tomará un momento</Text>
-      </View>
-    );
-  }
+  if (isProcesando)
+    return <LoadingScreen mensaje="Guardando tus respuestas..." />;
 
   const situacionActual = situaciones[indexActual];
   const opcionSeleccionada = respuestas[situacionActual?.id];

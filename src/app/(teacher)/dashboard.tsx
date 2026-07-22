@@ -1,13 +1,13 @@
+import LoadingScreen from "@/src/components/ui/LoadingScreen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { cerrarSesion, obtenerPerfil } from "../../service/auth.service";
@@ -73,13 +73,7 @@ export default function TeacherDashboard() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-      </View>
-    );
-  }
+  if (isLoading) return <LoadingScreen mensaje="Cargando tu inicio..." />;
 
   if (!session?.user) return null;
 

@@ -1,15 +1,15 @@
+import LoadingScreen from "@/src/components/ui/LoadingScreen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { obtenerTodosLosEstudiantes } from "../../service/docente.service";
@@ -86,13 +86,7 @@ export default function EstudiantesScreen() {
     return coincideBusqueda;
   });
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-      </View>
-    );
-  }
+  if (isLoading) return <LoadingScreen mensaje="Cargando estudiantes..." />;
 
   if (!session?.user) return null;
 

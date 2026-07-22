@@ -1,15 +1,15 @@
+import LoadingScreen from "@/src/components/ui/LoadingScreen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import CambiarPasswordModal from "../../components/student/CambiarPasswordModal";
 import EditarPerfilModal from "../../components/student/EditarPerfilModal";
@@ -76,13 +76,7 @@ export default function PerfilScreen() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-      </View>
-    );
-  }
+  if (isLoading) return <LoadingScreen mensaje="Cargando tu perfil..." />;
 
   if (!session?.user) {
     return null;

@@ -1,13 +1,13 @@
+import LoadingScreen from "@/src/components/ui/LoadingScreen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { obtenerTodasLasActividades } from "../../service/actividades.service";
@@ -126,13 +126,7 @@ export default function ActividadesScreen() {
     // Para completada, futura y pendiente no hace nada
   }
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-      </View>
-    );
-  }
+  if (isLoading) return <LoadingScreen mensaje="Cargando tus actividades..." />;
 
   const completadas = actividades.filter((a) => a.completada).length;
 

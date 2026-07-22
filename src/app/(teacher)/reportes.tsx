@@ -1,8 +1,8 @@
+import LoadingScreen from "@/src/components/ui/LoadingScreen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -63,7 +63,6 @@ export default function ReportesScreen() {
           registrados
         </Text>
       </View>
-
       {/* BUSCADOR */}
       <View style={styles.buscadorContainer}>
         <MaterialCommunityIcons
@@ -90,12 +89,9 @@ export default function ReportesScreen() {
           </TouchableOpacity>
         )}
       </View>
-
       {/* LISTA */}
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-        </View>
+        <LoadingScreen mensaje="Cargando reportes..." />
       ) : (
         <ScrollView
           style={styles.scrollView}

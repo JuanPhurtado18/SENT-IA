@@ -2,13 +2,13 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 
+import LoadingScreen from "@/src/components/ui/LoadingScreen";
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import {
@@ -112,13 +112,7 @@ export default function StudentHomeScreen() {
     return Math.max(0, diff);
   }
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-      </View>
-    );
-  }
+  if (isLoading) return <LoadingScreen mensaje="Cargando tu inicio..." />;
 
   const progresoActividad = respuestasCompletadas / 10;
   const actividadCompletada = respuestasCompletadas >= 10;
