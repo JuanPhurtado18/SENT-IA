@@ -1,11 +1,12 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 
@@ -17,13 +18,11 @@ export default function BienvenidaScreen() {
       <StatusBar barStyle="dark-content" backgroundColor={Colors.fondoApp} />
 
       <View style={styles.logoContainer}>
-        <View style={styles.logoCircle}>
-          <MaterialCommunityIcons
-            name="brain"
-            size={60}
-            color={Colors.lilaAcento}
-          />
-        </View>
+        <Image
+          source={require("../../../assets/images/logo.png")}
+          style={styles.logoImagen}
+          resizeMode="contain"
+        />
         <Text style={styles.appName}>SENT-IA</Text>
         <Text style={styles.slogan}>Bienestar emocional estudiantil</Text>
       </View>
@@ -73,13 +72,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 12,
   },
-  logoCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.azulClaro,
-    alignItems: "center",
-    justifyContent: "center",
+  logoImagen: {
+    width: 500,
+    height: 500,
     marginBottom: 8,
   },
   appName: {

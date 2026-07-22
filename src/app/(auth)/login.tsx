@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -55,13 +56,11 @@ export default function LoginScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.iconContainer}>
-          <MaterialCommunityIcons
-            name="account-circle"
-            size={72}
-            color={Colors.azulPrincipal}
-          />
-        </View>
+        <Image
+          source={require("../../../assets/images/logo.png")}
+          style={styles.logoImagen}
+          resizeMode="contain"
+        />
 
         <Text style={styles.title}>Bienvenido/a</Text>
         <Text style={styles.subtitle}>Ingresa tus datos para continuar</Text>
@@ -167,6 +166,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.fondoApp,
     paddingHorizontal: 32,
     paddingVertical: 48,
+  },
+  logoImagen: {
+    width: 100,
+    height: 100,
   },
   iconContainer: { alignItems: "center", marginBottom: 16 },
   title: {
