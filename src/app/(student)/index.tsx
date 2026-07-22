@@ -88,7 +88,15 @@ export default function StudentHomeScreen() {
   }
 
   function obtenerSaludo() {
-    const hora = new Date().getHours();
+    // Colombia es UTC-5, sin cambio de horario de verano
+    const offsetColombia = -5 * 60; // en minutos
+    const ahora = new Date();
+    const utcMinutos = ahora.getTime() + ahora.getTimezoneOffset() * 60000;
+    const horaColombia = new Date(utcMinutos + offsetColombia * 60000);
+    const hora = horaColombia.getHours();
+
+    console.log("Hora Colombia:", hora); // log temporal para verificar
+
     if (hora < 12) return "Buenos días";
     if (hora < 18) return "Buenas tardes";
     return "Buenas noches";
