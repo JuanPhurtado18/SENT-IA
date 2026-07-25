@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -15,44 +15,30 @@ import {
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { supabase } from "../../lib/supabase";
-import { actualizarPassword } from "../../service/auth.service";
+import { useAuthStore } from "../../store/authStore";
 
-export default function NuevaPasswordScreen() {
+export default function ActualizarPasswordScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const { setIsRecuperandoPassword } = useAuthStore();
+  const [nuevaPassword, setNuevaPassword] = useState("");
+  const [confirmarPassword, setConfirmarPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirmar, setShowConfirmar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionLista, setSessionLista] = useState(false);
 
-  useEffect(() => {
-    // Supabase envía el token en los params del deep link
-    // Cuando onAuthStateChange detecta PASSWORD_RECOVERY, la sesión ya está lista
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setSessionLista(true);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  async function handleActualizar() {
-    if (!password || !confirmPassword) {
+  async function handleActualizarPassword() {
+    if (!nuevaPassword || !confirmarPassword) {
       Alert.alert("Campos requeridos", "Por favor completa ambos campos.");
       return;
     }
-    if (password.length < 6) {
+    if (nuevaPassword.length < 6) {
       Alert.alert(
         "Contraseña muy corta",
         "La contraseña debe tener al menos 6 caracteres.",
       );
       return;
     }
-    if (password !== confirmPassword) {
+    if (nuevaPassword !== confirmarPassword) {
       Alert.alert(
         "Contraseñas no coinciden",
         "Verifica que ambas contraseñas sean iguales.",
@@ -62,8 +48,14 @@ export default function NuevaPasswordScreen() {
 
     setIsLoading(true);
     try {
-      await actualizarPassword(password);
+      const { error } = await supabase.auth.updateUser({
+        password: nuevaPassword,
+      });
+      if (error) throw error;
+
       await supabase.auth.signOut();
+      setIsRecuperandoPassword(false);
+
       Alert.alert(
         "¡Contraseña actualizada!",
         "Tu contraseña fue cambiada exitosamente. Inicia sesión con tu nueva contraseña.",
@@ -84,15 +76,6 @@ export default function NuevaPasswordScreen() {
     }
   }
 
-  if (!sessionLista) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
-        <Text style={styles.loadingText}>Verificando enlace...</Text>
-      </View>
-    );
-  }
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -107,13 +90,13 @@ export default function NuevaPasswordScreen() {
             <MaterialCommunityIcons
               name="lock-check-outline"
               size={48}
-              color={Colors.azulPrincipal}
+              color={Colors.verdePrincipal}
             />
           </View>
         </View>
 
-        <Text style={styles.title}>Nueva contraseña</Text>
-        <Text style={styles.subtitle}>
+        <Text style={styles.titulo}>Nueva contraseña</Text>
+        <Text style={styles.subtitulo}>
           Ingresa tu nueva contraseña. Debe tener al menos 6 caracteres.
         </Text>
 
@@ -126,8 +109,8 @@ export default function NuevaPasswordScreen() {
               placeholderTextColor={Colors.grisMedio}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
-              value={password}
-              onChangeText={setPassword}
+              value={nuevaPassword}
+              onChangeText={setNuevaPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <MaterialCommunityIcons
@@ -146,14 +129,14 @@ export default function NuevaPasswordScreen() {
               style={styles.passwordInput}
               placeholder="Repite tu contraseña"
               placeholderTextColor={Colors.grisMedio}
-              secureTextEntry={!showConfirm}
+              secureTextEntry={!showConfirmar}
               autoCapitalize="none"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              value={confirmarPassword}
+              onChangeText={setConfirmarPassword}
             />
-            <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
+            <TouchableOpacity onPress={() => setShowConfirmar(!showConfirmar)}>
               <MaterialCommunityIcons
-                name={showConfirm ? "eye-off-outline" : "eye-outline"}
+                name={showConfirmar ? "eye-off-outline" : "eye-outline"}
                 size={22}
                 color={Colors.grisMedio}
               />
@@ -163,7 +146,7 @@ export default function NuevaPasswordScreen() {
 
         <TouchableOpacity
           style={[styles.buttonPrimary, isLoading && styles.buttonDisabled]}
-          onPress={handleActualizar}
+          onPress={handleActualizarPassword}
           disabled={isLoading}
           activeOpacity={0.8}
         >
@@ -179,18 +162,6 @@ export default function NuevaPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: Colors.fondoApp,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-  },
-  loadingText: {
-    fontSize: 14,
-    fontFamily: "Poppins_400Regular",
-    color: Colors.grisMedio,
-  },
   container: {
     flexGrow: 1,
     backgroundColor: Colors.fondoApp,
@@ -198,23 +169,26 @@ const styles = StyleSheet.create({
     paddingTop: 64,
     paddingBottom: 32,
   },
-  iconContainer: { alignItems: "center", marginBottom: 24 },
+  iconContainer: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
   iconCircle: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: Colors.azulClaro,
+    backgroundColor: Colors.verdeClaro,
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
+  titulo: {
     fontSize: 22,
     fontFamily: "Poppins_700Bold",
     color: Colors.grisOscuro,
     textAlign: "center",
     marginBottom: 12,
   },
-  subtitle: {
+  subtitulo: {
     fontSize: 14,
     fontFamily: "Poppins_400Regular",
     color: Colors.grisMedio,

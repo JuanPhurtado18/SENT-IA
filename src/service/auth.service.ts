@@ -109,6 +109,25 @@ export async function enviarEmailRecuperacion(email: string) {
   if (error) throw error;
 }
 
+export async function enviarCodigoRecuperacion(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: undefined,
+  });
+  if (error) throw error;
+}
+
+export async function verificarCodigoOTP(
+  email: string,
+  token: string,
+): Promise<void> {
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: "recovery",
+  });
+  if (error) throw error;
+}
+
 export async function actualizarPassword(nuevaPassword: string) {
   const { error } = await supabase.auth.updateUser({
     password: nuevaPassword,

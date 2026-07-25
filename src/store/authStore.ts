@@ -8,10 +8,12 @@ interface AuthState {
   role: UserRole;
   isLoading: boolean;
   isRegistering: boolean;
+  isRecuperandoPassword: boolean;
   setSession: (session: Session | null) => void;
   setRole: (role: UserRole) => void;
   setIsLoading: (isLoading: boolean) => void;
   setIsRegistering: (isRegistering: boolean) => void;
+  setIsRecuperandoPassword: (value: boolean) => void;
   clearAuth: () => void;
 }
 
@@ -20,9 +22,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   role: null,
   isLoading: true,
   isRegistering: false,
+  isRecuperandoPassword: false,
   setSession: (session) => set({ session }),
   setRole: (role) => set({ role }),
   setIsLoading: (isLoading) => set({ isLoading }),
   setIsRegistering: (isRegistering) => set({ isRegistering }),
+  setIsRecuperandoPassword: (value) => set({ isRecuperandoPassword: value }),
   clearAuth: () => set({ session: null, role: null }),
 }));
