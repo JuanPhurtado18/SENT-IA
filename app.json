@@ -2,6 +2,7 @@
   "expo": {
     "name": "SENT-IA",
     "slug": "sent-ia",
+    "owner": "juanpabloh18",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -11,7 +12,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.sentia.app",
+      "package": "com.sentiaapp.estudiantes",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -33,12 +34,12 @@
           "data": [
             {
               "scheme": "sentia"
+            },
+            {
+              "scheme": "com.sentiaapp.estudiantes"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
@@ -65,7 +66,8 @@
         {
           "photosPermission": "SENT-IA necesita acceso a tu galería para que puedas agregar una foto de perfil."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

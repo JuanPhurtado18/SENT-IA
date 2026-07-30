@@ -216,3 +216,16 @@ export async function actualizarPerfil(
 
   if (error) throw error;
 }
+
+export async function iniciarSesionConGoogle(
+  idToken: string,
+  accessToken: string,
+) {
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: "google",
+    token: idToken,
+    access_token: accessToken,
+  });
+  if (error) throw error;
+  return data;
+}

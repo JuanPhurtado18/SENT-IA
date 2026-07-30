@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
+import { useGoogleAuth } from "../../hooks/useGoogleAuth";
 import { iniciarSesion } from "../../service/auth.service";
 
 export default function LoginScreen() {
@@ -46,6 +47,16 @@ export default function LoginScreen() {
       setIsLoading(false);
     }
   }
+
+  const { request, promptAsync } = useGoogleAuth(
+    () => {
+      // onSuccess: la redirección la maneja el _layout.tsx raíz automáticamente
+      console.log("Google sign-in exitoso");
+    },
+    (mensaje) => {
+      Alert.alert("Error con Google", mensaje);
+    },
+  );
 
   return (
     <KeyboardAvoidingView
@@ -130,13 +141,9 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity
-          style={styles.buttonGoogle}
-          onPress={() =>
-            Alert.alert(
-              "Próximamente",
-              "El login con Google estará disponible pronto.",
-            )
-          }
+          style={[styles.buttonGoogle, !request && styles.buttonDisabled]}
+          onPress={() => promptAsync()}
+          disabled={!request}
           activeOpacity={0.8}
         >
           <MaterialCommunityIcons
