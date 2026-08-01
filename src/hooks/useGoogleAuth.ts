@@ -1,75 +1,91 @@
-import { makeRedirectUri } from "expo-auth-session";
-import * as Google from "expo-auth-session/providers/google";
-import Constants from "expo-constants";
-import * as WebBrowser from "expo-web-browser";
-import { useEffect } from "react";
-import { iniciarSesionConGoogle } from "../service/auth.service";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
+import { useState } from "react";
+import { iniciarSesionConGoogleNativo } from "../service/auth.service";
+import { useAuthStore } from "../store/authStore";
 
-WebBrowser.maybeCompleteAuthSession();
-
-const ANDROID_CLIENT_ID =
-  "780674740973-f92kkau2t67k3f57f32kfv9nv387a9v1.apps.googleusercontent.com";
 const WEB_CLIENT_ID =
   "780674740973-rfmogdirib3qaoo768gob3l6p5qdbrfq.apps.googleusercontent.com";
 
-// Construye la URI según el entorno
-function obtenerRedirectUri(): string {
-  const isExpoGo = Constants.appOwnership === "expo";
-  const expoUsername = "juanpabloh18";
-  const slug = "sent-ia";
-
-  if (isExpoGo) {
-    return `https://auth.expo.io/@${expoUsername}/${slug}`;
-  }
-
-  return makeRedirectUri({
-    scheme: "sentia",
-    path: "auth/callback",
-  });
-}
+// Configurar Google Sign-In una sola vez
+GoogleSignin.configure({
+  webClientId: WEB_CLIENT_ID,
+  offlineAccess: false,
+  forceCodeForRefreshToken: false,
+});
 
 export function useGoogleAuth(
   onSuccess: () => void,
   onError: (msg: string) => void,
 ) {
-  const redirectUri = obtenerRedirectUri();
-  const isExpoGo = Constants.appOwnership === "expo";
+  const [isLoading, setIsLoading] = useState(false);
+  const { setIsGoogleAuth } = useAuthStore();
 
-  console.log("Redirect URI:", redirectUri);
-  console.log("Es Expo Go:", isExpoGo);
+  async function promptAsync() {
+    setIsLoading(true);
+    setIsGoogleAuth(true);
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
 
-  // En Expo Go usamos el Web Client ID para ambos porque el proxy
-  // de auth.expo.io solo funciona con credenciales web
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: isExpoGo ? WEB_CLIENT_ID : ANDROID_CLIENT_ID,
-    webClientId: WEB_CLIENT_ID,
-    redirectUri,
-  });
+      await GoogleSignin.signOut();
 
-  useEffect(() => {
-    if (request) {
-      console.log("Request URL completa:", request.url);
-    }
-  }, [request]);
+      const userInfo = await GoogleSignin.signIn();
+      console.log("Google Sign-In exitoso:", userInfo.data?.user?.email);
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      const idToken = response.authentication?.idToken;
-      const accessToken = response.authentication?.accessToken;
-
-      if (idToken && accessToken) {
-        iniciarSesionConGoogle(idToken, accessToken)
-          .then(() => onSuccess())
-          .catch((err) =>
-            onError(err.message || "Error al iniciar sesión con Google"),
-          );
-      } else {
-        onError("No se pudo obtener los tokens de Google");
+      const idToken = userInfo.data?.idToken;
+      if (!idToken) {
+        throw new Error("No se pudo obtener el token de Google");
       }
-    } else if (response?.type === "error") {
-      onError("Error en la autenticación con Google");
-    }
-  }, [response]);
 
-  return { request, promptAsync };
+      const data = await iniciarSesionConGoogleNativo(idToken);
+      console.log("Supabase session:", !!data.session);
+
+      // Liberamos el flag
+      setIsGoogleAuth(false);
+
+      // Forzamos la actualización del store con la sesión nueva
+      if (data.session) {
+        const {
+          setSession,
+          setRole,
+          setIsLoading: setStoreLoading,
+        } = useAuthStore.getState();
+
+        try {
+          const { obtenerPerfil } = await import("../service/auth.service");
+          const profile = await obtenerPerfil(data.session.user.id);
+          setSession(data.session);
+          setRole(profile.role as "estudiante" | "docente");
+          setStoreLoading(false);
+        } catch {
+          setSession(data.session);
+          setRole("estudiante");
+          setStoreLoading(false);
+        }
+      }
+
+      onSuccess();
+    } catch (error: any) {
+      setIsGoogleAuth(false);
+
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("Usuario canceló el sign-in de Google");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("Sign-in ya en progreso");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        onError("Google Play Services no está disponible en este dispositivo");
+      } else {
+        console.log("Error Google Sign-In:", error);
+        onError(error.message || "Error al iniciar sesión con Google");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return { promptAsync, isLoading };
 }

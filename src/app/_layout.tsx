@@ -29,6 +29,7 @@ export default function RootLayout() {
     isLoading,
     isRegistering,
     isRecuperandoPassword,
+    isGoogleAuth,
     setSession,
     setRole,
     setIsLoading,
@@ -42,6 +43,7 @@ export default function RootLayout() {
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (useAuthStore.getState().isRegistering) return;
       if (useAuthStore.getState().isRecuperandoPassword) return;
+      if (useAuthStore.getState().isGoogleAuth) return;
 
       setSession(newSession);
 
@@ -63,7 +65,13 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (isLoading || !fontsLoaded || isRegistering || isRecuperandoPassword)
+    if (
+      isLoading ||
+      !fontsLoaded ||
+      isRegistering ||
+      isRecuperandoPassword ||
+      isGoogleAuth
+    )
       return;
 
     const inAuthGroup = segments[0] === "(auth)";
@@ -84,6 +92,7 @@ export default function RootLayout() {
     fontsLoaded,
     isRegistering,
     isRecuperandoPassword,
+    isGoogleAuth,
     segments,
   ]);
 

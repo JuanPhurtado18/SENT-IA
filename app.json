@@ -3,7 +3,7 @@
     "name": "SENT-IA",
     "slug": "sent-ia",
     "owner": "juanpabloh18",
-    "version": "1.0.0",
+    "version": "1.1.7",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sentia",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.sentiaapp.estudiantes",
-      "versionCode": 1,
+      "versionCode": 12,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -32,11 +32,11 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
+            { "scheme": "sentia" },
+            { "scheme": "com.sentiaapp.estudiantes" },
             {
-              "scheme": "sentia"
-            },
-            {
-              "scheme": "com.sentiaapp.estudiantes"
+              "scheme": "com.sentiaapp.estudiantes",
+              "host": "oauthredirect"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
@@ -50,6 +50,7 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-google-signin/google-signin",
       [
         "expo-splash-screen",
         {

@@ -48,9 +48,8 @@ export default function LoginScreen() {
     }
   }
 
-  const { request, promptAsync } = useGoogleAuth(
+  const { promptAsync, isLoading: isGoogleLoading } = useGoogleAuth(
     () => {
-      // onSuccess: la redirección la maneja el _layout.tsx raíz automáticamente
       console.log("Google sign-in exitoso");
     },
     (mensaje) => {
@@ -141,17 +140,26 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.buttonGoogle, !request && styles.buttonDisabled]}
+          style={[
+            styles.buttonGoogle,
+            isGoogleLoading && styles.buttonDisabled,
+          ]}
           onPress={() => promptAsync()}
-          disabled={!request}
+          disabled={isGoogleLoading}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons
-            name="google"
-            size={20}
-            color={Colors.azulPrincipal}
-          />
-          <Text style={styles.buttonGoogleText}>Continuar con Google</Text>
+          {isGoogleLoading ? (
+            <ActivityIndicator size="small" color={Colors.azulPrincipal} />
+          ) : (
+            <>
+              <MaterialCommunityIcons
+                name="google"
+                size={20}
+                color={Colors.azulPrincipal}
+              />
+              <Text style={styles.buttonGoogleText}>Continuar con Google</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <View style={styles.registerLink}>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "307141725087",
+    "project_id": "sentia-c58e3",
+    "storage_bucket": "sentia-c58e3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:307141725087:android:a2be8fc958ddf62a978baa",
+        "android_client_info": {
+          "package_name": "com.sentiaapp.estudiantes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAK9WaGH70nw42f91V1EUZ7pgTm9ZgAAOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
