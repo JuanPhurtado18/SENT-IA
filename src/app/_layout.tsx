@@ -8,6 +8,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { obtenerPerfil } from "../service/auth.service";
 import { useAuthStore } from "../store/authStore";
@@ -104,10 +105,12 @@ export default function RootLayout() {
   if (!fontsLoaded || isLoading) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(student)" />
-      <Stack.Screen name="(teacher)" />
-    </Stack>
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(student)" />
+        <Stack.Screen name="(teacher)" />
+      </Stack>
+    </SafeAreaProvider>
   );
 }
