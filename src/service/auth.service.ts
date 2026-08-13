@@ -17,6 +17,7 @@ export async function registrarEstudiante(
   grado: string,
   fotoUri?: string,
 ) {
+  const INSITUCION = "Rafael Navia Varon";
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -24,7 +25,7 @@ export async function registrarEstudiante(
       data: {
         role: "estudiante",
         nombre_completo: nombreCompleto,
-        institucion,
+        institucion: INSITUCION,
         grado,
       },
     },

@@ -54,19 +54,21 @@ export default function RegistroPaso1Screen() {
       );
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (email.includes("@")) {
       Alert.alert(
         "Correo inválido",
-        "Por favor ingresa un correo electrónico válido.",
+        "Solo ingresa la parte antes del @, el dominio se agrega automáticamente.",
       );
       return;
     }
+
+    const emailCompleto = `${email.trim().toLowerCase()}@ietirafaelnaviaron.edu.co`;
 
     router.push({
       pathname: "/(auth)/registro-paso2",
       params: {
         nombreCompleto: nombreCompleto.trim(),
-        email: email.trim().toLowerCase(),
+        email: emailCompleto,
         fotoUri: fotoUri || "",
       },
     });
@@ -139,16 +141,19 @@ export default function RegistroPaso1Screen() {
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Correo electrónico</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="ejemplo@correo.com"
-            placeholderTextColor={Colors.grisMedio}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={email}
-            onChangeText={setEmail}
-          />
+          <View style={styles.emailContainer}>
+            <TextInput
+              style={styles.emailInput}
+              placeholder="tunombre"
+              placeholderTextColor={Colors.grisMedio}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={email}
+              onChangeText={setEmail}
+            />
+            <Text style={styles.emailDominio}>@ietirafaelnaviaron.edu.co</Text>
+          </View>
         </View>
 
         <TouchableOpacity
@@ -244,17 +249,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.azulClaro,
   },
-  rolContainer: {
+  emailContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: Colors.azulClaro,
+    backgroundColor: Colors.blanco,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: Colors.azulClaro,
   },
-  rolText: {
+  emailInput: {
+    flex: 1,
+    paddingVertical: 14,
     fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisOscuro,
+  },
+  emailDominio: {
+    fontSize: 13,
     fontFamily: "Poppins_400Regular",
     color: Colors.grisMedio,
   },
@@ -266,6 +278,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     elevation: 4,
   },
+  buttonDisabled: { opacity: 0.7 },
   buttonPrimaryText: {
     color: Colors.blanco,
     fontSize: 16,

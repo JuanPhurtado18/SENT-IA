@@ -17,7 +17,27 @@ import { Colors } from "../../constants/Colors";
 import { cerrarSesion, registrarEstudiante } from "../../service/auth.service";
 import { useAuthStore } from "../../store/authStore";
 
-const GRADOS = ["6°", "7°", "8°", "9°", "10°", "11°"];
+const GRADOS = [
+  "6-1°",
+  "6-2°",
+  "6-3°",
+  "7-1°",
+  "7-2°",
+  "7-3°",
+  "8-1°",
+  "8-2°",
+  "8-3°",
+  "9-1°",
+  "9-2°",
+  "9-3°",
+  "10-1°",
+  "10-2°",
+  "10-3°",
+  "11-1°",
+  "11-2°",
+  "11-3°",
+];
+const INSTITUCION = "Rafael Navia Varon";
 
 export default function RegistroPaso2Screen() {
   const router = useRouter();
@@ -31,13 +51,13 @@ export default function RegistroPaso2Screen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [institucion, setInstitucion] = useState("");
   const [grado, setGrado] = useState("");
+  const [gradoOpen, setGradoOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { setIsRegistering } = useAuthStore();
 
   async function handleRegistrar() {
-    if (!password || !confirmPassword || !institucion || !grado) {
+    if (!password || !confirmPassword || !grado) {
       Alert.alert("Campos requeridos", "Por favor completa todos los campos.");
       return;
     }
@@ -64,7 +84,7 @@ export default function RegistroPaso2Screen() {
         email,
         password,
         nombreCompleto,
-        institucion,
+        INSTITUCION,
         grado,
         fotoUri || undefined,
       );
@@ -156,39 +176,59 @@ export default function RegistroPaso2Screen() {
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Institución educativa</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Nombre de tu colegio"
-            placeholderTextColor={Colors.grisMedio}
-            autoCapitalize="words"
-            value={institucion}
-            onChangeText={setInstitucion}
-          />
+          <View style={styles.inputDeshabilitado}>
+            <Text style={styles.inputDeshabilitadoTexto}>{INSTITUCION}</Text>
+          </View>
         </View>
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Grado</Text>
-          <View style={styles.gradosContainer}>
-            {GRADOS.map((g) => (
-              <TouchableOpacity
-                key={g}
-                style={[
-                  styles.gradoChip,
-                  grado === g && styles.gradoChipSelected,
-                ]}
-                onPress={() => setGrado(g)}
-              >
-                <Text
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={() => setGradoOpen(!gradoOpen)}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={
+                grado
+                  ? styles.dropdownTextoSeleccionado
+                  : styles.dropdownPlaceholder
+              }
+            >
+              {grado || "Selecciona tu grado"}
+            </Text>
+            <MaterialCommunityIcons
+              name={gradoOpen ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={Colors.grisMedio}
+            />
+          </TouchableOpacity>
+          {gradoOpen && (
+            <View style={styles.dropdownMenu}>
+              {GRADOS.map((g) => (
+                <TouchableOpacity
+                  key={g}
                   style={[
-                    styles.gradoChipText,
-                    grado === g && styles.gradoChipTextSelected,
+                    styles.dropdownItem,
+                    grado === g && styles.dropdownItemSelected,
                   ]}
+                  onPress={() => {
+                    setGrado(g);
+                    setGradoOpen(false);
+                  }}
                 >
-                  {g}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                  <Text
+                    style={[
+                      styles.dropdownItemTexto,
+                      grado === g && styles.dropdownItemTextoSelected,
+                    ]}
+                  >
+                    {g}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
         <TouchableOpacity
@@ -246,17 +286,6 @@ const styles = StyleSheet.create({
     color: Colors.grisOscuro,
     marginBottom: 6,
   },
-  input: {
-    backgroundColor: Colors.blanco,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 14,
-    fontFamily: "Poppins_400Regular",
-    color: Colors.grisOscuro,
-    borderWidth: 1,
-    borderColor: Colors.azulClaro,
-  },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -273,25 +302,66 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_400Regular",
     color: Colors.grisOscuro,
   },
-  gradosContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  gradoChip: {
+  inputDeshabilitado: {
+    backgroundColor: Colors.azulClaro,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
+    paddingVertical: 14,
+    borderWidth: 1,
     borderColor: Colors.azulClaro,
-    backgroundColor: Colors.blanco,
+    justifyContent: "center",
   },
-  gradoChipSelected: {
-    backgroundColor: Colors.azulPrincipal,
-    borderColor: Colors.azulPrincipal,
-  },
-  gradoChipText: {
-    fontSize: 13,
-    fontFamily: "Poppins_600SemiBold",
+  inputDeshabilitadoTexto: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
     color: Colors.grisMedio,
   },
-  gradoChipTextSelected: { color: Colors.blanco },
+  dropdownButton: {
+    backgroundColor: Colors.blanco,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: Colors.azulClaro,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dropdownPlaceholder: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisMedio,
+  },
+  dropdownTextoSeleccionado: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisOscuro,
+  },
+  dropdownMenu: {
+    backgroundColor: Colors.blanco,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.azulClaro,
+    marginTop: 4,
+    elevation: 4,
+    overflow: "hidden",
+  },
+  dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dropdownItemSelected: {
+    backgroundColor: Colors.azulClaro,
+  },
+  dropdownItemTexto: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisOscuro,
+  },
+  dropdownItemTextoSelected: {
+    fontFamily: "Poppins_600SemiBold",
+    color: Colors.azulPrincipal,
+  },
   buttonPrimary: {
     backgroundColor: Colors.azulPrincipal,
     paddingVertical: 16,
