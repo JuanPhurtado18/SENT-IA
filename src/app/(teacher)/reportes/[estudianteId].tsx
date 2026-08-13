@@ -21,46 +21,19 @@ import {
   obtenerObservacion,
   obtenerPerfilEstudiante,
 } from "../../../service/docente.service";
+import {
+  obtenerIndicadoresEstudiante,
+  obtenerTendenciaEstudiante,
+} from "../../../service/indicadores.service";
 import { exportarReportePDF } from "../../../service/pdf.service";
 import { useAuthStore } from "../../../store/authStore";
-// Datos de prueba hardcodeados hasta que el módulo de IA esté listo
-const INDICADORES_PRUEBA = [
-  {
-    area: "Escolar",
-    nivel: "Estable",
-    puntuacion: 85,
-    color: Colors.verdePrincipal,
-    fondo: Colors.verdeClaro,
-  },
-  {
-    area: "Familiar",
-    nivel: "Prioritario",
-    puntuacion: 25,
-    color: Colors.rojoAlerta,
-    fondo: "#FFEBEB",
-  },
-  {
-    area: "Personal",
-    nivel: "Seguimiento",
-    puntuacion: 45,
-    color: Colors.naranjaAlerta,
-    fondo: "#FFF3E0",
-  },
-  {
-    area: "Social",
-    nivel: "Estable",
-    puntuacion: 78,
-    color: Colors.verdePrincipal,
-    fondo: Colors.verdeClaro,
-  },
-  {
-    area: "Afectiva",
-    nivel: "Prioritario",
-    puntuacion: 20,
-    color: Colors.rojoAlerta,
-    fondo: "#FFEBEB",
-  },
-];
+
+const NIVEL_ALERTA_CONFIG: Record<string, { color: string; fondo: string }> = {
+  estable: { color: Colors.verdePrincipal, fondo: Colors.verdeClaro },
+  observacion: { color: Colors.naranjaAlerta, fondo: "#FFF3E0" },
+  seguimiento: { color: Colors.naranjaAlerta, fondo: "#FFF3E0" },
+  prioritario: { color: Colors.rojoAlerta, fondo: "#FFEBEB" },
+};
 
 const TENDENCIA_PRUEBA = [
   { semana: "Sem 5", valor: 0.7 },
@@ -69,18 +42,34 @@ const TENDENCIA_PRUEBA = [
   { semana: "Sem 8", valor: 0.3 },
 ];
 
-const NIVEL_ALERTA_CONFIG: Record<string, { color: string; fondo: string }> = {
-  Estable: { color: Colors.verdePrincipal, fondo: Colors.verdeClaro },
-  Observación: { color: Colors.naranjaAlerta, fondo: "#FFF3E0" },
-  Seguimiento: { color: Colors.naranjaAlerta, fondo: "#FFF3E0" },
-  Prioritario: { color: Colors.rojoAlerta, fondo: "#FFEBEB" },
-};
+function obtenerColorNivel(nivel: string): string {
+  const colores: Record<string, string> = {
+    estable: Colors.verdePrincipal,
+    observacion: Colors.naranjaAlerta,
+    seguimiento: Colors.naranjaAlerta,
+    prioritario: Colors.rojoAlerta,
+  };
+  return colores[nivel] || Colors.grisMedio;
+}
 
-// Calcula el nivel general basado en los indicadores
-function calcularNivelGeneral(indicadores: typeof INDICADORES_PRUEBA): string {
-  if (indicadores.some((i) => i.nivel === "Prioritario")) return "Prioritario";
-  if (indicadores.some((i) => i.nivel === "Seguimiento")) return "Seguimiento";
-  if (indicadores.some((i) => i.nivel === "Observación")) return "Observación";
+function obtenerFondoNivel(nivel: string): string {
+  const fondos: Record<string, string> = {
+    estable: Colors.verdeClaro,
+    observacion: "#FFF3E0",
+    seguimiento: "#FFF3E0",
+    prioritario: "#FFEBEB",
+  };
+  return fondos[nivel] || "#F0F0F0";
+}
+
+function capitalizarPrimera(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function calcularNivelGeneral(indicadores: { nivel: string }[]): string {
+  if (indicadores.some((i) => i.nivel === "prioritario")) return "Prioritario";
+  if (indicadores.some((i) => i.nivel === "seguimiento")) return "Seguimiento";
+  if (indicadores.some((i) => i.nivel === "observacion")) return "Observación";
   return "Estable";
 }
 
@@ -90,35 +79,71 @@ export default function ReporteIndividualScreen() {
   const { estudianteId } = useLocalSearchParams<{ estudianteId: string }>();
 
   const [perfil, setPerfil] = useState<any>(null);
+  const [perfilDocente, setPerfilDocente] = useState<any>(null);
   const [actividadesCompletadas, setActividadesCompletadas] = useState(0);
   const [observacion, setObservacion] = useState<any>(null);
   const [textoObservacion, setTextoObservacion] = useState("");
+  const [indicadores, setIndicadores] = useState<any[]>([]);
+  const [resumenIA, setResumenIA] = useState<string>("");
+  const [tieneIndicadores, setTieneIndicadores] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isGuardando, setIsGuardando] = useState(false);
-  const [observacionEditada, setObservacionEditada] = useState(false);
   const [isExportando, setIsExportando] = useState(false);
-  const [perfilDocente, setPerfilDocente] = useState<any>(null);
+  const [observacionEditada, setObservacionEditada] = useState(false);
+  const [tendencia, setTendencia] = useState<any[]>([]);
 
   useEffect(() => {
+    console.log("Cargando reporte para estudianteId:", estudianteId);
     if (estudianteId && session?.user) cargarDatos();
   }, [estudianteId, session]);
 
   async function cargarDatos() {
     setIsLoading(true);
     try {
-      const [perfilData, completadas, observacionData, perfilDocenteData] =
-        await Promise.all([
-          obtenerPerfilEstudiante(estudianteId),
-          contarActividadesCompletadasEstudiante(estudianteId),
-          obtenerObservacion(estudianteId, session!.user.id),
-          obtenerPerfil(session!.user.id),
-        ]);
+      const [
+        perfilData,
+        completadas,
+        observacionData,
+        perfilDocenteData,
+        indicadoresData,
+        tendenciaData,
+      ] = await Promise.all([
+        obtenerPerfilEstudiante(estudianteId),
+        contarActividadesCompletadasEstudiante(estudianteId),
+        obtenerObservacion(estudianteId, session!.user.id),
+        obtenerPerfil(session!.user.id),
+        obtenerIndicadoresEstudiante(estudianteId),
+        obtenerTendenciaEstudiante(estudianteId),
+      ]);
+      console.log("Indicadores recibidos:", JSON.stringify(indicadoresData));
+
+      console.log("Total indicadores:", indicadoresData?.length);
 
       setPerfil(perfilData);
       setActividadesCompletadas(completadas);
       setObservacion(observacionData);
       setTextoObservacion(observacionData?.texto || "");
       setPerfilDocente(perfilDocenteData);
+
+      // Procesar indicadores reales
+      const indicadoresPorArea = indicadoresData
+        .filter((i: any) => i.area !== null)
+        .map((i: any) => ({
+          area: capitalizarPrimera(i.area),
+          nivel: capitalizarPrimera(i.nivel),
+          puntuacion: Number(i.puntuacion),
+          color: obtenerColorNivel(i.nivel),
+          fondo: obtenerFondoNivel(i.nivel),
+        }));
+
+      const indicadorGeneral = indicadoresData.find(
+        (i: any) => i.area === null,
+      );
+
+      setIndicadores(indicadoresPorArea);
+      setTendencia(tendenciaData);
+      setResumenIA(indicadorGeneral?.resumen_ia || "");
+      setTieneIndicadores(indicadoresPorArea.length > 0);
     } catch (error) {
       console.log("Error cargando reporte:", error);
     } finally {
@@ -142,7 +167,6 @@ export default function ReporteIndividualScreen() {
       );
       setObservacionEditada(false);
       Alert.alert("✓ Guardado", "La observación fue guardada correctamente.");
-      // Recargamos para obtener el id si era nueva
       const nueva = await obtenerObservacion(estudianteId, session!.user.id);
       setObservacion(nueva);
     } catch (error: any) {
@@ -155,32 +179,29 @@ export default function ReporteIndividualScreen() {
     }
   }
 
-  if (isLoading) return <LoadingScreen mensaje="Cargando reporte..." />;
-
-  if (!session?.user || !perfil) return null;
-
-  const nivelGeneral = calcularNivelGeneral(INDICADORES_PRUEBA);
-  const nivelConfig = NIVEL_ALERTA_CONFIG[nivelGeneral];
-  const inicialNombre = perfil.nombre_completo?.[0]?.toUpperCase() || "E";
-  const alturaMaxBarra = 80;
-
   async function handleExportarPDF() {
     if (!perfil) return;
 
     setIsExportando(true);
     try {
+      const nivelGeneral = tieneIndicadores
+        ? calcularNivelGeneral(indicadores)
+        : "Sin datos";
+
       await exportarReportePDF({
         nombreEstudiante: perfil.nombre_completo,
         grado: perfil.grado,
         institucion: perfil.institucion,
         actividadesCompletadas,
-        nivelGeneral: calcularNivelGeneral(INDICADORES_PRUEBA),
-        indicadores: INDICADORES_PRUEBA.map((ind) => ({
-          area: ind.area,
-          nivel: ind.nivel,
-          puntuacion: ind.puntuacion,
-          color: ind.color,
-        })),
+        nivelGeneral,
+        indicadores: tieneIndicadores
+          ? indicadores.map((ind) => ({
+              area: ind.area,
+              nivel: ind.nivel,
+              puntuacion: ind.puntuacion,
+              color: ind.color,
+            }))
+          : [],
         tendencia: TENDENCIA_PRUEBA,
         observacion: textoObservacion,
         nombreDocente: perfilDocente?.nombre_completo || "Docente",
@@ -197,13 +218,28 @@ export default function ReporteIndividualScreen() {
     }
   }
 
+  if (isLoading) return <LoadingScreen mensaje="Cargando reporte..." />;
+
+  if (!session?.user || !perfil) return null;
+
+  const nivelGeneral = tieneIndicadores
+    ? calcularNivelGeneral(indicadores)
+    : "Sin datos";
+
+  const nivelConfig =
+    NIVEL_ALERTA_CONFIG[nivelGeneral.toLowerCase()] ||
+    NIVEL_ALERTA_CONFIG["observacion"];
+
+  const inicialNombre = perfil.nombre_completo?.[0]?.toUpperCase() || "E";
+  const alturaMaxBarra = 80;
+
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      {/* HEADER CON BOTÓN ATRÁS */}
+      {/* HEADER */}
       <View style={styles.headerRow}>
         <TouchableOpacity
           style={styles.backButton}
@@ -249,105 +285,148 @@ export default function ReporteIndividualScreen() {
       {/* INDICADORES POR ÁREA */}
       <View style={styles.seccion}>
         <Text style={styles.seccionTitulo}>INDICADORES POR ÁREA</Text>
-        <View style={styles.indicadoresCard}>
-          {INDICADORES_PRUEBA.map((indicador, index) => (
-            <View key={indicador.area}>
-              <View style={styles.indicadorItem}>
-                <Text style={styles.indicadorArea}>{indicador.area}</Text>
-                <View style={styles.indicadorBarraRow}>
-                  <View style={styles.indicadorBarra}>
+        {!tieneIndicadores ? (
+          <View style={styles.sinDatosCard}>
+            <MaterialCommunityIcons
+              name="chart-bar"
+              size={32}
+              color={Colors.grisMedio}
+            />
+            <Text style={styles.sinDatosTexto}>
+              Los indicadores aparecerán cuando el estudiante complete su
+              primera actividad.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.indicadoresCard}>
+            {indicadores.map((indicador, index) => (
+              <View key={indicador.area}>
+                <View style={styles.indicadorItem}>
+                  <Text style={styles.indicadorArea}>{indicador.area}</Text>
+                  <View style={styles.indicadorBarraRow}>
+                    <View style={styles.indicadorBarra}>
+                      <View
+                        style={[
+                          styles.indicadorBarraFill,
+                          {
+                            width: `${indicador.puntuacion}%`,
+                            backgroundColor: indicador.color,
+                          },
+                        ]}
+                      />
+                    </View>
                     <View
                       style={[
-                        styles.indicadorBarraFill,
+                        styles.nivelBadgeSmall,
+                        { backgroundColor: indicador.fondo },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.nivelBadgeSmallTexto,
+                          { color: indicador.color },
+                        ]}
+                      >
+                        {indicador.nivel}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                {index < indicadores.length - 1 && (
+                  <View style={styles.separador} />
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
+      {/* RESUMEN DE IA */}
+      {resumenIA ? (
+        <View style={styles.seccion}>
+          <Text style={styles.seccionTitulo}>ANÁLISIS DE IA</Text>
+          <View style={styles.resumenIACard}>
+            <MaterialCommunityIcons
+              name="robot-outline"
+              size={20}
+              color={Colors.lilaAcento}
+            />
+            <Text style={styles.resumenIATexto}>{resumenIA}</Text>
+          </View>
+        </View>
+      ) : null}
+
+      <View style={styles.seccion}>
+        <Text style={styles.seccionTitulo}>
+          TENDENCIA ÚLTIMAS {tendencia.length} SEMANAS
+        </Text>
+        {tendencia.length === 0 ? (
+          <View style={styles.sinDatosCard}>
+            <MaterialCommunityIcons
+              name="chart-line"
+              size={32}
+              color={Colors.grisMedio}
+            />
+            <Text style={styles.sinDatosTexto}>
+              La tendencia aparecerá cuando el estudiante complete actividades.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.tendenciaCard}>
+            <View style={styles.tendenciaBarras}>
+              {tendencia.map((item) => (
+                <View key={item.fecha} style={styles.tendenciaItem}>
+                  <View style={styles.tendenciaBarraContainer}>
+                    <View
+                      style={[
+                        styles.tendenciaBarra,
                         {
-                          width: `${indicador.puntuacion}%`,
-                          backgroundColor: indicador.color,
+                          height: alturaMaxBarra * item.valor,
+                          backgroundColor:
+                            item.valor >= 0.75
+                              ? Colors.verdePrincipal
+                              : item.valor >= 0.5
+                                ? Colors.naranjaAlerta
+                                : Colors.rojoAlerta,
                         },
                       ]}
                     />
                   </View>
-                  <View
-                    style={[
-                      styles.nivelBadgeSmall,
-                      { backgroundColor: indicador.fondo },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.nivelBadgeSmallTexto,
-                        { color: indicador.color },
-                      ]}
-                    >
-                      {indicador.nivel}
-                    </Text>
-                  </View>
+                  <Text style={styles.tendenciaSemana}>{item.semana}</Text>
                 </View>
+              ))}
+            </View>
+            <View style={styles.tendenciaLeyenda}>
+              <View style={styles.leyendaItem}>
+                <View
+                  style={[
+                    styles.leyendaCircle,
+                    { backgroundColor: Colors.verdePrincipal },
+                  ]}
+                />
+                <Text style={styles.leyendaTexto}>Estable</Text>
               </View>
-              {index < INDICADORES_PRUEBA.length - 1 && (
-                <View style={styles.separador} />
-              )}
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* TENDENCIA ÚLTIMAS 4 SEMANAS */}
-      <View style={styles.seccion}>
-        <Text style={styles.seccionTitulo}>TENDENCIA ÚLTIMAS 4 SEMANAS</Text>
-        <View style={styles.tendenciaCard}>
-          <View style={styles.tendenciaBarras}>
-            {TENDENCIA_PRUEBA.map((item) => (
-              <View key={item.semana} style={styles.tendenciaItem}>
-                <View style={styles.tendenciaBarraContainer}>
-                  <View
-                    style={[
-                      styles.tendenciaBarra,
-                      {
-                        height: alturaMaxBarra * item.valor,
-                        backgroundColor:
-                          item.valor >= 0.7
-                            ? Colors.verdePrincipal
-                            : item.valor >= 0.5
-                              ? Colors.naranjaAlerta
-                              : Colors.rojoAlerta,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.tendenciaSemana}>{item.semana}</Text>
+              <View style={styles.leyendaItem}>
+                <View
+                  style={[
+                    styles.leyendaCircle,
+                    { backgroundColor: Colors.naranjaAlerta },
+                  ]}
+                />
+                <Text style={styles.leyendaTexto}>Seguimiento</Text>
               </View>
-            ))}
-          </View>
-          <View style={styles.tendenciaLeyenda}>
-            <View style={styles.leyendaItem}>
-              <View
-                style={[
-                  styles.leyendaCircle,
-                  { backgroundColor: Colors.verdePrincipal },
-                ]}
-              />
-              <Text style={styles.leyendaTexto}>Estable</Text>
-            </View>
-            <View style={styles.leyendaItem}>
-              <View
-                style={[
-                  styles.leyendaCircle,
-                  { backgroundColor: Colors.naranjaAlerta },
-                ]}
-              />
-              <Text style={styles.leyendaTexto}>Seguimiento</Text>
-            </View>
-            <View style={styles.leyendaItem}>
-              <View
-                style={[
-                  styles.leyendaCircle,
-                  { backgroundColor: Colors.rojoAlerta },
-                ]}
-              />
-              <Text style={styles.leyendaTexto}>Prioritario</Text>
+              <View style={styles.leyendaItem}>
+                <View
+                  style={[
+                    styles.leyendaCircle,
+                    { backgroundColor: Colors.rojoAlerta },
+                  ]}
+                />
+                <Text style={styles.leyendaTexto}>Prioritario</Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
       </View>
 
       {/* OBSERVACIÓN DEL DOCENTE */}
@@ -531,6 +610,22 @@ const styles = StyleSheet.create({
     color: Colors.grisMedio,
     letterSpacing: 1,
   },
+  sinDatosCard: {
+    backgroundColor: Colors.blanco,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderColor: Colors.azulClaro,
+  },
+  sinDatosTexto: {
+    fontSize: 13,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisMedio,
+    textAlign: "center",
+    lineHeight: 20,
+  },
   indicadoresCard: {
     backgroundColor: Colors.blanco,
     borderRadius: 16,
@@ -577,6 +672,25 @@ const styles = StyleSheet.create({
   separador: {
     height: 1,
     backgroundColor: Colors.azulClaro,
+  },
+  resumenIACard: {
+    backgroundColor: Colors.blanco,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.azulClaro,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.lilaAcento,
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "flex-start",
+  },
+  resumenIATexto: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisOscuro,
+    lineHeight: 20,
   },
   tendenciaCard: {
     backgroundColor: Colors.blanco,
@@ -683,7 +797,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Poppins_600SemiBold",
   },
-
   exportarButtonDisabled: {
     opacity: 0.7,
     elevation: 0,

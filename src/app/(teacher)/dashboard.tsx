@@ -7,31 +7,22 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { cerrarSesion, obtenerPerfil } from "../../service/auth.service";
-import { obtenerEstadisticasDocente } from "../../service/docente.service";
+import {
+  obtenerAlertasRecientes,
+  obtenerEstadisticasDocente,
+  obtenerIndicadoresGrupoDashboard,
+} from "../../service/docente.service";
 import { useAuthStore } from "../../store/authStore";
 
-// Datos de prueba hardcodeados para alertas y indicadores
-// Se reemplazarán cuando el módulo de IA esté listo
-const ALERTAS_PRUEBA: any[] = [];
-
-const INDICADORES_PRUEBA: any[] = [];
-
 const NIVEL_COLORS: Record<string, string> = {
-  Estable: Colors.verdePrincipal,
-  Observación: Colors.naranjaAlerta,
-  Seguimiento: Colors.rojoAlerta,
-  Prioritario: Colors.rojoAlerta,
-};
-
-const NIVEL_FONDOS: Record<string, string> = {
-  Estable: Colors.verdeClaro,
-  Observación: "#FFF3E0",
-  Seguimiento: "#FFEBEB",
-  Prioritario: "#FFEBEB",
+  estable: Colors.verdePrincipal,
+  observacion: Colors.naranjaAlerta,
+  seguimiento: Colors.rojoAlerta,
+  prioritario: Colors.rojoAlerta,
 };
 
 export default function TeacherDashboard() {
@@ -42,6 +33,8 @@ export default function TeacherDashboard() {
     totalAlertas: 0,
     activosEstaSemana: 0,
   });
+  const [alertasRecientes, setAlertasRecientes] = useState<any[]>([]);
+  const [indicadoresGrupo, setIndicadoresGrupo] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
@@ -53,11 +46,16 @@ export default function TeacherDashboard() {
   async function cargarDatos() {
     setIsLoading(true);
     try {
-      const perfilData = await obtenerPerfil(session!.user.id);
+      const [perfilData, stats, alertas, indicadores] = await Promise.all([
+        obtenerPerfil(session!.user.id),
+        obtenerEstadisticasDocente(),
+        obtenerAlertasRecientes(),
+        obtenerIndicadoresGrupoDashboard(),
+      ]);
       setPerfil(perfilData);
-
-      const stats = await obtenerEstadisticasDocente();
       setEstadisticas(stats);
+      setAlertasRecientes(alertas);
+      setIndicadoresGrupo(indicadores);
     } catch (error) {
       console.log("Error cargando dashboard docente:", error);
     } finally {
@@ -74,7 +72,6 @@ export default function TeacherDashboard() {
   }
 
   if (isLoading) return <LoadingScreen mensaje="Cargando tu inicio..." />;
-
   if (!session?.user) return null;
 
   const inicialNombre = perfil?.nombre_completo?.[0]?.toUpperCase() || "D";
@@ -144,92 +141,133 @@ export default function TeacherDashboard() {
           />
           <Text style={styles.seccionTitulo}>ALERTAS RECIENTES</Text>
         </View>
-
-        {ALERTAS_PRUEBA.length === 0 ? (
+        {alertasRecientes.length === 0 ? (
           <View style={styles.sinDatosCard}>
             <Text style={styles.sinDatosTexto}>No hay alertas activas</Text>
           </View>
         ) : (
-          ALERTAS_PRUEBA.map((alerta) => (
-            <View
-              key={alerta.id}
-              style={[
-                styles.alertaCard,
-                {
-                  backgroundColor: alerta.fondo,
-                  borderLeftColor: alerta.color,
-                },
-              ]}
-            >
-              <View style={styles.alertaHeader}>
-                <MaterialCommunityIcons
-                  name={alerta.icono}
-                  size={16}
-                  color={alerta.color}
-                />
-                <Text style={[styles.alertaTipo, { color: alerta.color }]}>
-                  {alerta.tipo === "prioritaria"
-                    ? "Atención prioritaria"
-                    : "Seguimiento"}
+          alertasRecientes.map((alerta) => {
+            const config = {
+              prioritaria: {
+                color: Colors.rojoAlerta,
+                fondo: "#FFEBEB",
+                icono: "alert-circle",
+                label: "Prioritaria",
+              },
+              seguimiento: {
+                color: Colors.naranjaAlerta,
+                fondo: "#FFF3E0",
+                icono: "alert",
+                label: "Seguimiento",
+              },
+              bienestar_general: {
+                color: Colors.rojoAlerta,
+                fondo: "#FFEBEB",
+                icono: "heart-broken",
+                label: "Bienestar",
+              },
+              inactividad: {
+                color: Colors.naranjaAlerta,
+                fondo: "#FFF3E0",
+                icono: "clock-alert-outline",
+                label: "Inactividad",
+              },
+            }[alerta.tipo as string] ?? {
+              color: Colors.grisMedio,
+              fondo: "#F0F0F0",
+              icono: "alert",
+              label: alerta.tipo,
+            };
+
+            return (
+              <View
+                key={alerta.id}
+                style={[
+                  styles.alertaCard,
+                  {
+                    backgroundColor: config.fondo,
+                    borderLeftColor: config.color,
+                  },
+                ]}
+              >
+                <View style={styles.alertaHeader}>
+                  <MaterialCommunityIcons
+                    name={config.icono as any}
+                    size={16}
+                    color={config.color}
+                  />
+                  <Text style={[styles.alertaTipo, { color: config.color }]}>
+                    {config.label}
+                  </Text>
+                </View>
+                <Text style={styles.alertaNombre}>
+                  {alerta.nombreEstudiante}
+                </Text>
+                <Text style={styles.alertaDescripcion}>
+                  {alerta.descripcion}
                 </Text>
               </View>
-              <Text style={styles.alertaNombre}>{alerta.nombre}</Text>
-              <Text style={styles.alertaDescripcion}>{alerta.descripcion}</Text>
-            </View>
-          ))
+            );
+          })
         )}
       </View>
 
       {/* INDICADORES DEL GRUPO */}
       <View style={styles.seccion}>
         <Text style={styles.seccionTitulo}>INDICADORES DEL GRUPO</Text>
-        {INDICADORES_PRUEBA.length === 0 ? (
+        {indicadoresGrupo.length === 0 ? (
           <View style={styles.sinDatosCard}>
             <Text style={styles.sinDatosTexto}>
-              Los indicadores estarán disponibles cuando el módulo de IA esté
-              activo.
+              Los indicadores aparecerán cuando los estudiantes completen
+              actividades.
             </Text>
           </View>
         ) : (
           <View style={styles.indicadoresCard}>
-            {INDICADORES_PRUEBA.map((indicador, index) => (
-              <View key={indicador.area}>
-                <View style={styles.indicadorItem}>
-                  <Text style={styles.indicadorArea}>{indicador.area}</Text>
-                  <View style={styles.indicadorBarraContainer}>
-                    <View style={styles.indicadorBarra}>
-                      <View
-                        style={[
-                          styles.indicadorBarraFill,
-                          {
-                            width: `${indicador.progreso * 100}%`,
-                            backgroundColor: indicador.color,
-                          },
-                        ]}
-                      />
-                    </View>
+            {indicadoresGrupo.map((ind, index) => {
+              const color = NIVEL_COLORS[ind.nivel] ?? Colors.grisMedio;
+              const progreso = ind.esConteo
+                ? ind.total > 0
+                  ? ind.puntuacion / ind.total
+                  : 0
+                : ind.puntuacion / 100;
+
+              return (
+                <View key={ind.area}>
+                  <View style={styles.indicadorItem}>
                     <View
-                      style={[
-                        styles.nivelBadge,
-                        { backgroundColor: NIVEL_FONDOS[indicador.nivel] },
-                      ]}
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                      }}
                     >
-                      <Text
-                        style={[
-                          styles.nivelBadgeTexto,
-                          { color: NIVEL_COLORS[indicador.nivel] },
-                        ]}
-                      >
-                        {indicador.nivel}
+                      <Text style={styles.indicadorArea}>{ind.area}</Text>
+                      <Text style={[styles.indicadorValor, { color }]}>
+                        {ind.esConteo
+                          ? `${ind.puntuacion}/${ind.total}`
+                          : `${ind.puntuacion}/100`}
                       </Text>
                     </View>
+                    <View style={styles.indicadorBarraContainer}>
+                      <View style={styles.indicadorBarra}>
+                        <View
+                          style={[
+                            styles.indicadorBarraFill,
+                            {
+                              width: `${progreso * 100}%`,
+                              backgroundColor: color,
+                            },
+                          ]}
+                        />
+                      </View>
+                    </View>
                   </View>
+                  {index < indicadoresGrupo.length - 1 && (
+                    <View style={styles.separador} />
+                  )}
                 </View>
-                {index < INDICADORES_PRUEBA.length - 1 && (
-                  <View style={styles.separador} />
-                )}
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </View>
@@ -238,12 +276,6 @@ export default function TeacherDashboard() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: Colors.fondoApp,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   scrollView: {
     flex: 1,
     backgroundColor: Colors.fondoApp,
@@ -348,6 +380,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Poppins_400Regular",
     color: Colors.grisMedio,
+    textAlign: "center",
   },
   alertaCard: {
     borderRadius: 12,
@@ -391,10 +424,13 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_600SemiBold",
     color: Colors.grisOscuro,
   },
+  indicadorValor: {
+    fontSize: 13,
+    fontFamily: "Poppins_700Bold",
+  },
   indicadorBarraContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
   },
   indicadorBarra: {
     flex: 1,
@@ -405,15 +441,6 @@ const styles = StyleSheet.create({
   indicadorBarraFill: {
     height: 6,
     borderRadius: 3,
-  },
-  nivelBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  nivelBadgeTexto: {
-    fontSize: 10,
-    fontFamily: "Poppins_700Bold",
   },
   separador: {
     height: 1,

@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,12 @@ import {
   View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
+import {
+  marcarAlertaRevisada,
+  obtenerAlertas,
+  reactivarAlerta,
+} from "../../service/alertas.service";
+import { useAuthStore } from "../../store/authStore";
 
 type NivelAlerta =
   | "prioritaria"
@@ -22,72 +29,13 @@ interface AlertaItem {
   tipo: NivelAlerta;
   nombreEstudiante: string;
   descripcion: string;
-  semana: string;
   fecha: string;
   estado: EstadoAlerta;
 }
 
-const ALERTAS_INICIALES: AlertaItem[] = [
-  {
-    id: "1",
-    tipo: "prioritaria",
-    nombreEstudiante: "Juan Pérez",
-    descripcion:
-      "Indicadores críticos en área afectiva y familiar durante 3 semanas consecutivas.",
-    semana: "Semana 8",
-    fecha: "18 jul 2026",
-    estado: "activa",
-  },
-  {
-    id: "2",
-    tipo: "prioritaria",
-    nombreEstudiante: "Carlos Ramírez",
-    descripcion:
-      "Caída significativa en el bienestar general en una sola semana.",
-    semana: "Semana 8",
-    fecha: "18 jul 2026",
-    estado: "activa",
-  },
-  {
-    id: "3",
-    tipo: "seguimiento",
-    nombreEstudiante: "María García",
-    descripcion:
-      "Indicador del área familiar en nivel seguimiento por 2 semanas consecutivas.",
-    semana: "Semana 7",
-    fecha: "11 jul 2026",
-    estado: "activa",
-  },
-  {
-    id: "4",
-    tipo: "inactividad",
-    nombreEstudiante: "Laura Mendoza",
-    descripcion:
-      "No ha completado la actividad semanal en las últimas 3 semanas.",
-    semana: "Semana 6 - 8",
-    fecha: "11 jul 2026",
-    estado: "activa",
-  },
-  {
-    id: "5",
-    tipo: "seguimiento",
-    nombreEstudiante: "Pedro Sánchez",
-    descripcion:
-      "Indicador del área personal en nivel seguimiento por 2 semanas consecutivas.",
-    semana: "Semana 7",
-    fecha: "11 jul 2026",
-    estado: "revisada",
-  },
-];
-
 const TIPO_CONFIG: Record<
   NivelAlerta,
-  {
-    label: string;
-    color: string;
-    fondo: string;
-    icono: string;
-  }
+  { label: string; color: string; fondo: string; icono: string }
 > = {
   prioritaria: {
     label: "Atención prioritaria",
@@ -118,8 +66,74 @@ const TIPO_CONFIG: Record<
 type FiltroTipo = "todas" | "activas" | "revisadas";
 
 export default function AlertasScreen() {
-  const [alertas, setAlertas] = useState<AlertaItem[]>(ALERTAS_INICIALES);
+  const { session } = useAuthStore();
+  const [alertas, setAlertas] = useState<AlertaItem[]>([]);
   const [filtro, setFiltro] = useState<FiltroTipo>("activas");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    cargarAlertas();
+  }, []);
+
+  async function cargarAlertas() {
+    setIsLoading(true);
+    try {
+      const data = await obtenerAlertas();
+      setAlertas(data);
+    } catch (error) {
+      console.log("Error cargando alertas:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleMarcarRevisada(id: string) {
+    Alert.alert(
+      "Marcar como revisada",
+      "¿Confirmas que revisaste esta alerta? Saldrá de la vista principal pero quedará en el historial.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Marcar revisada",
+          onPress: async () => {
+            try {
+              await marcarAlertaRevisada(id, session!.user.id);
+              setAlertas((prev) =>
+                prev.map((a) =>
+                  a.id === id ? { ...a, estado: "revisada" } : a,
+                ),
+              );
+            } catch {
+              Alert.alert("Error", "No se pudo marcar la alerta.");
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  async function handleReactivar(id: string) {
+    Alert.alert(
+      "Reactivar alerta",
+      "¿Quieres mover esta alerta de vuelta a activas?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Reactivar",
+          onPress: async () => {
+            try {
+              await reactivarAlerta(id);
+              setAlertas((prev) =>
+                prev.map((a) => (a.id === id ? { ...a, estado: "activa" } : a)),
+              );
+            } catch {
+              Alert.alert("Error", "No se pudo reactivar la alerta.");
+            }
+          },
+        },
+      ],
+    );
+  }
 
   const alertasFiltradas = alertas.filter((a) => {
     if (filtro === "activas") return a.estado === "activa";
@@ -130,45 +144,21 @@ export default function AlertasScreen() {
   const totalActivas = alertas.filter((a) => a.estado === "activa").length;
   const totalRevisadas = alertas.filter((a) => a.estado === "revisada").length;
 
-  function handleMarcarRevisada(id: string) {
-    Alert.alert(
-      "Marcar como revisada",
-      "¿Confirmas que revisaste esta alerta? Saldrá de la vista principal pero quedará en el historial.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Marcar revisada",
-          onPress: () => {
-            setAlertas((prev) =>
-              prev.map((a) => (a.id === id ? { ...a, estado: "revisada" } : a)),
-            );
-          },
-        },
-      ],
-    );
-  }
-
-  function handleReactivar(id: string) {
-    Alert.alert(
-      "Reactivar alerta",
-      "¿Quieres mover esta alerta de vuelta a activas?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Reactivar",
-          onPress: () => {
-            setAlertas((prev) =>
-              prev.map((a) => (a.id === id ? { ...a, estado: "activa" } : a)),
-            );
-          },
-        },
-      ],
+  if (isLoading) {
+    return (
+      <View
+        style={[
+          styles.wrapper,
+          { alignItems: "center", justifyContent: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={Colors.azulPrincipal} />
+      </View>
     );
   }
 
   return (
     <View style={styles.wrapper}>
-      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.titulo}>Alertas</Text>
         <View style={styles.contadoresRow}>
@@ -205,7 +195,6 @@ export default function AlertasScreen() {
         </View>
       </View>
 
-      {/* FILTROS */}
       <View style={styles.filtrosContainer}>
         {(["activas", "todas", "revisadas"] as FiltroTipo[]).map((f) => (
           <TouchableOpacity
@@ -230,7 +219,6 @@ export default function AlertasScreen() {
         ))}
       </View>
 
-      {/* LISTA */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.listaContainer}
@@ -265,7 +253,6 @@ export default function AlertasScreen() {
                   esRevisada && styles.alertaCardRevisada,
                 ]}
               >
-                {/* TIPO Y FECHA */}
                 <View style={styles.alertaTopRow}>
                   <View
                     style={[
@@ -285,7 +272,6 @@ export default function AlertasScreen() {
                   <Text style={styles.alertaFecha}>{alerta.fecha}</Text>
                 </View>
 
-                {/* NOMBRE Y DESCRIPCIÓN */}
                 <Text
                   style={[
                     styles.alertaNombre,
@@ -298,17 +284,7 @@ export default function AlertasScreen() {
                   {alerta.descripcion}
                 </Text>
 
-                {/* SEMANA Y ACCIÓN */}
                 <View style={styles.alertaBottomRow}>
-                  <View style={styles.semanaTag}>
-                    <MaterialCommunityIcons
-                      name="calendar-outline"
-                      size={12}
-                      color={Colors.grisMedio}
-                    />
-                    <Text style={styles.semanaTexto}>{alerta.semana}</Text>
-                  </View>
-
                   {esRevisada ? (
                     <View style={styles.revisadaRow}>
                       <MaterialCommunityIcons
@@ -351,30 +327,15 @@ export default function AlertasScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: Colors.fondoApp,
-    paddingTop: 56,
-  },
-  header: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-    gap: 12,
-  },
+  wrapper: { flex: 1, backgroundColor: Colors.fondoApp, paddingTop: 56 },
+  header: { paddingHorizontal: 20, marginBottom: 16, gap: 12 },
   titulo: {
     fontSize: 24,
     fontFamily: "Poppins_700Bold",
     color: Colors.grisOscuro,
   },
-  contadoresRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  contadorItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
+  contadoresRow: { flexDirection: "row", gap: 12 },
+  contadorItem: { flexDirection: "row", alignItems: "center", gap: 8 },
   contadorCircle: {
     width: 32,
     height: 32,
@@ -382,10 +343,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  contadorNumero: {
-    fontSize: 14,
-    fontFamily: "Poppins_700Bold",
-  },
+  contadorNumero: { fontSize: 14, fontFamily: "Poppins_700Bold" },
   contadorLabel: {
     fontSize: 13,
     fontFamily: "Poppins_400Regular",
@@ -414,15 +372,9 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_600SemiBold",
     color: Colors.grisMedio,
   },
-  filtroTextoActivo: {
-    color: Colors.blanco,
-  },
+  filtroTextoActivo: { color: Colors.blanco },
   scrollView: { flex: 1 },
-  listaContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-    gap: 12,
-  },
+  listaContainer: { paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
   sinAlertas: {
     alignItems: "center",
     paddingTop: 60,
@@ -446,9 +398,7 @@ const styles = StyleSheet.create({
     elevation: 1,
     gap: 8,
   },
-  alertaCardRevisada: {
-    opacity: 0.7,
-  },
+  alertaCardRevisada: { opacity: 0.7 },
   alertaTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -462,10 +412,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
   },
-  tipoTexto: {
-    fontSize: 11,
-    fontFamily: "Poppins_700Bold",
-  },
+  tipoTexto: { fontSize: 11, fontFamily: "Poppins_700Bold" },
   alertaFecha: {
     fontSize: 11,
     fontFamily: "Poppins_400Regular",
@@ -476,9 +423,7 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_700Bold",
     color: Colors.grisOscuro,
   },
-  textoRevisado: {
-    color: Colors.grisMedio,
-  },
+  textoRevisado: { color: Colors.grisMedio },
   alertaDescripcion: {
     fontSize: 13,
     fontFamily: "Poppins_400Regular",
@@ -487,19 +432,9 @@ const styles = StyleSheet.create({
   },
   alertaBottomRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     marginTop: 4,
-  },
-  semanaTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  semanaTexto: {
-    fontSize: 11,
-    fontFamily: "Poppins_400Regular",
-    color: Colors.grisMedio,
   },
   revisarButton: {
     flexDirection: "row",
@@ -516,11 +451,7 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_600SemiBold",
     color: Colors.azulPrincipal,
   },
-  revisadaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
+  revisadaRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   revisadaTexto: {
     fontSize: 12,
     fontFamily: "Poppins_600SemiBold",

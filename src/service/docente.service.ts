@@ -206,3 +206,92 @@ export async function guardarObservacion(
     if (error) throw error;
   }
 }
+
+export async function obtenerAlertasRecientes() {
+  const { data, error } = await supabase
+    .from("alertas")
+    .select(
+      `
+    id,
+    tipo,
+    descripcion,
+    estado,
+    created_at,
+    profiles!alertas_usuario_id_fkey (
+      nombre_completo
+    )
+  `,
+    )
+    .eq("estado", "activa")
+    .order("created_at", { ascending: false })
+    .limit(3);
+
+  console.log("Alertas data:", JSON.stringify(data));
+  console.log("Alertas error:", JSON.stringify(error));
+
+  if (error || !data) return [];
+
+  return data.map((a: any) => ({
+    id: a.id,
+    tipo: a.tipo,
+    descripcion: a.descripcion,
+    nombreEstudiante: a.profiles?.nombre_completo ?? "Estudiante",
+  }));
+}
+
+export async function obtenerIndicadoresGrupoDashboard() {
+  // Trae el indicador general más reciente de cada estudiante
+  const { data, error } = await supabase
+    .from("indicadores")
+    .select("usuario_id, puntuacion, nivel, created_at")
+    .is("area", null)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  // Un indicador por estudiante (el más reciente)
+  const porEstudiante = new Map<string, any>();
+  for (const ind of data) {
+    if (!porEstudiante.has(ind.usuario_id)) {
+      porEstudiante.set(ind.usuario_id, ind);
+    }
+  }
+
+  const indicadores = Array.from(porEstudiante.values());
+  if (indicadores.length === 0) return [];
+
+  const promedio = Math.round(
+    indicadores.reduce((acc, i) => acc + Number(i.puntuacion), 0) /
+      indicadores.length,
+  );
+
+  const conteo = { estable: 0, observacion: 0, seguimiento: 0, prioritario: 0 };
+  for (const i of indicadores) conteo[i.nivel as keyof typeof conteo]++;
+
+  return [
+    {
+      area: "Bienestar general",
+      puntuacion: promedio,
+      nivel: calcularNivelDashboard(promedio),
+    },
+    {
+      area: "En nivel estable",
+      puntuacion: conteo.estable,
+      total: indicadores.length,
+      esConteo: true,
+    },
+    {
+      area: "Requieren atención",
+      puntuacion: conteo.seguimiento + conteo.prioritario,
+      total: indicadores.length,
+      esConteo: true,
+    },
+  ];
+}
+
+function calcularNivelDashboard(puntuacion: number): string {
+  if (puntuacion >= 75) return "estable";
+  if (puntuacion >= 50) return "observacion";
+  if (puntuacion >= 25) return "seguimiento";
+  return "prioritario";
+}
