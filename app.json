@@ -3,7 +3,7 @@
     "name": "SENT-IA",
     "slug": "sent-ia",
     "owner": "juanpabloh18",
-    "version": "1.2.8",
+    "version": "1.2.9",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sentia",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.sentiaapp.estudiantes",
-      "versionCode": 18,
+      "versionCode": 19,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

@@ -1,109 +1,244 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
-  StatusBar,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../../constants/Colors";
+import { useGoogleAuth } from "../../hooks/useGoogleAuth";
+import { iniciarSesion } from "../../service/auth.service";
 
-export default function BienvenidaScreen() {
+export default function LoginScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleLogin() {
+    if (!email || !password) {
+      Alert.alert(
+        "Campos requeridos",
+        "Por favor ingresa tu correo y contraseña.",
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await iniciarSesion(email.trim().toLowerCase(), password);
+      // La redirección la maneja el _layout.tsx raíz via onAuthStateChange
+    } catch (error: any) {
+      Alert.alert(
+        "Error al ingresar",
+        error.message || "Verifica tus credenciales.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const { promptAsync, isLoading: isGoogleLoading } = useGoogleAuth(
+    () => {
+      console.log("Google sign-in exitoso");
+    },
+    (mensaje) => {
+      Alert.alert("Error con Google", mensaje);
+    },
+  );
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          paddingTop: Math.max(insets.top, 32),
-          paddingBottom: Math.max(
-            insets.bottom,
-            Platform.OS === "android" ? 16 : 24,
-          ),
-        },
-      ]}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.fondoApp} />
-
-      <View style={styles.logoContainer}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         <Image
           source={require("../../../assets/images/logo.png")}
           style={styles.logoImagen}
           resizeMode="contain"
         />
-        <Text style={styles.appName}>SENT-IA</Text>
-        <Text style={styles.slogan}>Bienestar emocional estudiantil</Text>
-      </View>
 
-      <View style={styles.buttonsContainer}>
+        <Text style={styles.title}>Bienvenido/a</Text>
+        <Text style={styles.subtitle}>Ingresa tus datos para continuar</Text>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Correo electrónico</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="ejemplo@correo.com"
+            placeholderTextColor={Colors.grisMedio}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            onChangeText={setEmail}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Contraseña</Text>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="••••••••"
+              placeholderTextColor={Colors.grisMedio}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <MaterialCommunityIcons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color={Colors.grisMedio}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <TouchableOpacity
-          style={styles.buttonPrimary}
-          onPress={() => router.push("/(auth)/login")}
-          activeOpacity={0.8}
+          style={styles.forgotPassword}
+          onPress={() => router.push("/(auth)/recuperar-password")}
         >
-          <Text style={styles.buttonPrimaryText}>Iniciar sesión</Text>
+          <Text style={styles.forgotPasswordText}>
+            ¿Olvidaste tu contraseña?
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.buttonSecondary}
-          onPress={() => router.push("/(auth)/registro-paso1")}
+          style={[styles.buttonPrimary, isLoading && styles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={isLoading}
           activeOpacity={0.8}
         >
-          <Text style={styles.buttonSecondaryText}>Registrarse</Text>
+          {isLoading ? (
+            <ActivityIndicator color={Colors.blanco} />
+          ) : (
+            <Text style={styles.buttonPrimaryText}>Ingresar</Text>
+          )}
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.privacyContainer}>
-        <MaterialCommunityIcons
-          name="lock-outline"
-          size={14}
-          color={Colors.grisMedio}
-        />
-        <Text style={styles.privacyText}>Privacidad garantizada</Text>
-      </View>
-    </View>
+        <View style={styles.separator}>
+          <View style={styles.separatorLine} />
+          <Text style={styles.separatorText}>o</Text>
+          <View style={styles.separatorLine} />
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.buttonGoogle,
+            isGoogleLoading && styles.buttonDisabled,
+          ]}
+          onPress={() => promptAsync()}
+          disabled={isGoogleLoading}
+          activeOpacity={0.8}
+        >
+          {isGoogleLoading ? (
+            <ActivityIndicator size="small" color={Colors.azulPrincipal} />
+          ) : (
+            <>
+              <MaterialCommunityIcons
+                name="google"
+                size={20}
+                color={Colors.azulPrincipal}
+              />
+              <Text style={styles.buttonGoogleText}>Continuar con Google</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.registerLink}>
+          <Text style={styles.registerText}>¿No tienes cuenta? </Text>
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/registro-paso1")}
+          >
+            <Text style={styles.registerLinkText}>Regístrate</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: Colors.fondoApp,
-    alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 32,
-  },
-  logoContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
+    paddingVertical: 48,
   },
   logoImagen: {
-    width: 500,
-    height: 500,
-    marginBottom: 8,
+    width: 100,
+    height: 100,
   },
-  appName: {
-    fontSize: 32,
+  iconContainer: { alignItems: "center", marginBottom: 16 },
+  title: {
+    fontSize: 22,
     fontFamily: "Poppins_700Bold",
     color: Colors.grisOscuro,
-    letterSpacing: 2,
+    textAlign: "center",
   },
-  slogan: {
+  subtitle: {
     fontSize: 14,
     fontFamily: "Poppins_400Regular",
     color: Colors.grisMedio,
+    textAlign: "center",
+    marginBottom: 32,
   },
-  buttonsContainer: {
-    width: "100%",
-    gap: 12,
-    marginBottom: 16,
+  inputGroup: { marginBottom: 16 },
+  label: {
+    fontSize: 13,
+    fontFamily: "Poppins_600SemiBold",
+    color: Colors.grisOscuro,
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: Colors.blanco,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisOscuro,
+    borderWidth: 1,
+    borderColor: Colors.azulClaro,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.blanco,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: Colors.azulClaro,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisOscuro,
+  },
+  forgotPassword: { alignSelf: "flex-end", marginBottom: 24 },
+  forgotPasswordText: {
+    fontSize: 13,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.azulPrincipal,
   },
   buttonPrimary: {
     backgroundColor: Colors.azulPrincipal,
@@ -112,31 +247,53 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 4,
   },
+  buttonDisabled: { opacity: 0.7 },
   buttonPrimaryText: {
     color: Colors.blanco,
     fontSize: 16,
     fontFamily: "Poppins_600SemiBold",
   },
-  buttonSecondary: {
-    borderWidth: 2,
-    borderColor: Colors.azulPrincipal,
-    paddingVertical: 14,
-    borderRadius: 24,
-    alignItems: "center",
-  },
-  buttonSecondaryText: {
-    color: Colors.azulPrincipal,
-    fontSize: 16,
-    fontFamily: "Poppins_600SemiBold",
-  },
-  privacyContainer: {
+  separator: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    marginVertical: 24,
+    gap: 12,
   },
-  privacyText: {
-    fontSize: 12,
+  separatorLine: { flex: 1, height: 1, backgroundColor: Colors.azulClaro },
+  separatorText: {
+    fontSize: 13,
     fontFamily: "Poppins_400Regular",
     color: Colors.grisMedio,
+  },
+  buttonGoogle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: Colors.azulClaro,
+    backgroundColor: Colors.blanco,
+    paddingVertical: 14,
+    borderRadius: 24,
+  },
+  buttonGoogleText: {
+    fontSize: 15,
+    fontFamily: "Poppins_600SemiBold",
+    color: Colors.azulPrincipal,
+  },
+  registerLink: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 24,
+  },
+  registerText: {
+    fontSize: 14,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisMedio,
+  },
+  registerLinkText: {
+    fontSize: 14,
+    fontFamily: "Poppins_600SemiBold",
+    color: Colors.azulPrincipal,
   },
 });

@@ -73,8 +73,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logoImagen: {
-    width: 500,
-    height: 500,
+    width: 200,
+    height: 200,
     marginBottom: 8,
   },
   appName: {
