@@ -1,8 +1,12 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../../constants/Colors";
 
 export default function TeacherLayout() {
+  const insets = useSafeAreaInsets();
+  const paddingBottom = Math.max(insets.bottom, 8);
+
   return (
     <Tabs
       screenOptions={{
@@ -13,9 +17,9 @@ export default function TeacherLayout() {
           backgroundColor: Colors.blanco,
           borderTopWidth: 1,
           borderTopColor: Colors.azulClaro,
-          paddingBottom: 8,
+          paddingBottom,
           paddingTop: 8,
-          height: 64,
+          height: 56 + paddingBottom,
         },
         tabBarLabelStyle: {
           fontFamily: "Poppins_600SemiBold",
@@ -75,12 +79,7 @@ export default function TeacherLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="reportes/[estudianteId]"
-        options={{
-          href: null,
-        }}
-      />
+      <Tabs.Screen name="reportes/[estudianteId]" options={{ href: null }} />
     </Tabs>
   );
 }
