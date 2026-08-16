@@ -6,9 +6,10 @@ import {
 } from "@expo-google-fonts/poppins";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import SplashAnimado from "../components/ui/SplashAnimado";
 import { supabase } from "../lib/supabase";
 import { obtenerPerfil } from "../service/auth.service";
 import { useAuthStore } from "../store/authStore";
@@ -23,6 +24,8 @@ export default function RootLayout() {
     Poppins_600SemiBold,
     Poppins_700Bold,
   });
+  const [mostrarSplash, setMostrarSplash] = useState(true);
+  const [splashTerminado, setSplashTerminado] = useState(false);
 
   const {
     session,
@@ -65,13 +68,15 @@ export default function RootLayout() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Navegación solo cuando el splash terminó
   useEffect(() => {
     if (
       isLoading ||
       !fontsLoaded ||
       isRegistering ||
       isRecuperandoPassword ||
-      isGoogleAuth
+      isGoogleAuth ||
+      !splashTerminado // 👈 espera al splash
     )
       return;
 
@@ -94,6 +99,7 @@ export default function RootLayout() {
     isRegistering,
     isRecuperandoPassword,
     isGoogleAuth,
+    splashTerminado,
     segments,
   ]);
 
@@ -104,13 +110,22 @@ export default function RootLayout() {
 
   if (!fontsLoaded || isLoading) return null;
 
+  function handleSplashFinish() {
+    setMostrarSplash(false);
+    setSplashTerminado(true);
+  }
+
   return (
     <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(student)" />
-        <Stack.Screen name="(teacher)" />
-      </Stack>
+      {mostrarSplash ? (
+        <SplashAnimado onFinish={handleSplashFinish} />
+      ) : (
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(student)" />
+          <Stack.Screen name="(teacher)" />
+        </Stack>
+      )}
     </SafeAreaProvider>
   );
 }
