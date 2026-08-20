@@ -476,10 +476,4 @@ Desarrollador del proyecto SENT-IA.
 
 GitHub: [@JuanPhurtado18](https://github.com/JuanPhurtado18?utm_source=chatgpt.com)
 
----
 
-# 📄 Licencia
-
-Este proyecto se distribuye bajo la licencia **MIT**.
-
-Consulta el archivo [`LICENSE`](./LICENSE) para conocer los términos completos.
