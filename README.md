@@ -136,40 +136,27 @@ Las alertas permanecen registradas en el historial incluso después de ser marca
 # Arquitectura
 
 SENT-IA está dividido en dos módulos principales:
-┌──────────────────────────────────────────────┐
-│ SENT-IA │
-│ │
-│ Aplicación móvil + Backend │
-└──────────────────────┬───────────────────────┘
-│
-┌─────────▼─────────┐
-│ React Native │
-│ + Expo │
-└─────────┬─────────┘
-│
-│ Supabase
-▼
-┌───────────────────┐
-│ Supabase │
-│ │
-│ PostgreSQL │
-│ Authentication │
-│ Storage │
-│ Edge Functions │
-└─────────┬─────────┘
-│
-▼
-┌───────────────────┐
-│ Motor de análisis │
-│ │
-│ Meta Llama 3.1 8B │
-│ NVIDIA NIM │
-│ Indicadores │
-│ Tendencias │
-│ Alertas │
-└───────────────────┘
 
-
+ SENT-IA 
+    │
+    ▼
+Aplicación móvil + Backend 
+    |
+    ▼
+ React Native + Expo   
+    | 
+Supabase
+PostgreSQL  
+Authentication
+Storage Edge Functions 
+    │
+    ▼
+Motor de análisis 
+Meta Llama 3.1 8B 
+NVIDIA NIM 
+Indicadores 
+Tendencias 
+Alertas 
 
 ---
 
