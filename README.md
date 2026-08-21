@@ -203,125 +203,131 @@ La configuración actual del proyecto utiliza Expo Router como entry point y Rea
 
 La estructura principal del repositorio está organizada de la siguiente manera:
 
-
+```
 SENT-IA/
 │
-├── .claude/ # Configuración relacionada con Claude
-├── .vscode/ # Configuración del editor
+├── .claude/                 # Configuración relacionada con Claude
+├── .vscode/                 # Configuración del editor
 │
-├── app-mobile/ # Componentes/configuración relacionada
-│ # con la aplicación móvil
+├── app-mobile/              # Componentes/configuración relacionada
+│                             # con la aplicación móvil
 │
-├── assets/ # Recursos gráficos y multimedia
+├── assets/                  # Recursos gráficos y multimedia
 │
-├── backend/ # Lógica y funciones del backend
-│ ├── cloudflare/
-│ └── supabase/
+├── backend/                 # Lógica y funciones del backend
+│   ├── cloudflare/
+│   └── supabase/
 │
 ├── src/
-│ ├── app/ # Rutas y pantallas con Expo Router
-│ ├── components/ # Componentes reutilizables
-│ ├── constants/ # Constantes de la aplicación
-│ ├── hooks/ # Custom hooks
-│ ├── lib/ # Configuraciones y utilidades
-│ ├── service/ # Servicios y comunicación con backend
-│ └── store/ # Estado global con Zustand
+│   ├── app/                 # Rutas y pantallas con Expo Router
+│   ├── components/          # Componentes reutilizables
+│   ├── constants/           # Constantes de la aplicación
+│   ├── hooks/               # Custom hooks
+│   ├── lib/                 # Configuraciones y utilidades
+│   ├── service/             # Servicios y comunicación con backend
+│   └── store/               # Estado global con Zustand
 │
 ├── supabase/
-│ └── .temp/ # Archivos temporales de Supabase
+│   └── .temp/               # Archivos temporales de Supabase
 │
-├── app.json # Configuración de Expo
-├── eas.json # Configuración de EAS
-├── package.json # Dependencias y scripts
-├── tsconfig.json # Configuración de TypeScript
+├── app.json                 # Configuración de Expo
+├── eas.json                 # Configuración de EAS
+├── package.json             # Dependencias y scripts
+├── tsconfig.json            # Configuración de TypeScript
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── LICENSE
 └── README.md
-
+```
 ---
-
 # Autenticación y roles
 
 SENT-IA implementa dos perfiles principales:
 
-         ┌──────────────┐
-         │     Login    │
-         └──────┬───────┘
-                │
-   ┌────────────┴────────────┐
-   │                         │
-   ▼                         ▼
- ┌──────────────┐ ┌──────────────┐
- │  Estudiante  │ │  Docente     │
- └──────┬───────┘ └──────┬───────┘
-        │                │
-        ▼                ▼
-   Actividades         Dashboard
-   Historial           Estudiantes
-   Perfil              Indicadores
-   Alertas
-   Reportes
-
-
-
+```
+             ┌──────────────┐
+             │     Login    │
+             └──────┬───────┘
+                    │
+       ┌────────────┴────────────┐
+       │                         │
+       ▼                         ▼
+┌──────────────┐          ┌──────────────┐
+│  Estudiante  │          │    Docente   │
+└──────┬───────┘          └──────┬───────┘
+       │                         │
+       ▼                         ▼
+Actividades                 Dashboard
+Historial                  Estudiantes
+Perfil                     Indicadores
+                           Alertas
+                           Reportes
+```
 
 La autenticación se gestiona mediante Supabase Authentication y el sistema diferencia las funcionalidades disponibles según el rol del usuario.
-
 ---
 
 # Base de datos
 
 La arquitectura de datos está construida sobre **PostgreSQL mediante Supabase**, con 8 tablas que gestionan las entidades principales del sistema.
 
-
+```
 Usuarios
-│
-├── Actividades
-│ │
-│ └── Situaciones
-│ │
-│ └── Respuestas
-│
-├── Indicadores
-│
-├── Alertas
-│
-└── Observaciones
-
-
+   │
+   ├── Actividades
+   │       │
+   │       └── Situaciones
+   │               │
+   │               └── Respuestas
+   │
+   ├── Indicadores
+   │
+   ├── Alertas
+   │
+   └── Observaciones
+```
 
 ### Privacidad
 
 Una de las reglas principales del sistema es que:
+
 > Los docentes no deben acceder a las respuestas individuales de los estudiantes.
 
 En su lugar, reciben los indicadores calculados por el motor de análisis.
 
 ---
-
 # Flujo del estudiante
-Login
-│
-▼
-Dashboard
-│
-├───────────────┐
-▼ ▼
-Estudiantes Alertas
-│
-▼
-Estudiante
-│
-▼
-Reporte individual
-│
-├── Indicadores
-├── Tendencias
-├── Observaciones
-└── Exportar PDF
 
+```
+Bienvenida
+    │
+    ▼
+Autenticación
+    │
+    ▼
+Inicio
+    │
+    ▼
+Actividad semanal
+    │
+    ├── Situación 1
+    ├── Situación 2
+    ├── ...
+    └── Situación 10
+             │
+             ▼
+        Finalización
+             │
+             ▼
+      Análisis con IA
+      (Meta Llama 3.1 8B
+       via NVIDIA NIM)
+             │
+             ▼
+       Indicadores
+```
 
+Cada actividad contiene **10 situaciones**, con cuatro opciones de respuesta y un tiempo estimado de entre 10 y 15 minutos.
 
 ---
 
@@ -338,6 +344,31 @@ Los reportes incluyen:
 - Observaciones del docente.
 
 Los reportes se generan en formato PDF mediante Expo Print y Expo Sharing.
+
+---
+# Flujo del docente
+
+```
+Login
+  │
+  ▼
+Dashboard
+  │
+  ├───────────────┐
+  ▼               ▼
+Estudiantes      Alertas
+  │
+  ▼
+Estudiante
+  │
+  ▼
+Reporte individual
+  │
+  ├── Indicadores
+  ├── Tendencias
+  ├── Observaciones
+  └── Exportar PDF
+```
 
 ---
 
@@ -364,38 +395,38 @@ Estas restricciones forman parte del diseño funcional del sistema.
 > **Nota:** SENT-IA es una herramienta tecnológica de seguimiento y apoyo. Los indicadores no deben interpretarse como un diagnóstico clínico.
 
 ---
-
 # Lógica de indicadores
 
 El motor toma las respuestas de las actividades y las envía al modelo de lenguaje, que las transforma en puntuaciones asociadas a las diferentes áreas.
 
 El flujo conceptual es:
 
+```
 Respuesta
-│
-▼
+    │
+    ▼
 Envío a Edge Function
-│
-▼
+    │
+    ▼
 Meta Llama 3.1 8B
 (NVIDIA NIM)
-│
-▼
+    │
+    ▼
 Indicador por área
-│
-▼
+    │
+    ▼
 Nivel
-│
-├── Estable
-├── Observación
-├── Seguimiento
-└── Atención prioritaria
-│
-▼
-Alertas
+    │
+    ├── Estable
+    ├── Observación
+    ├── Seguimiento
+    └── Atención prioritaria
+           │
+           ▼
+        Alertas
+```
 
 Posteriormente, los resultados históricos permiten identificar tendencias semana a semana.
-
 ---
 
 # Análisis de tendencias
