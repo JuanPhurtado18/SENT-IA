@@ -205,28 +205,33 @@ export default function RegistroPaso2Screen() {
           </TouchableOpacity>
           {gradoOpen && (
             <View style={styles.dropdownMenu}>
-              {GRADOS.map((g) => (
-                <TouchableOpacity
-                  key={g}
-                  style={[
-                    styles.dropdownItem,
-                    grado === g && styles.dropdownItemSelected,
-                  ]}
-                  onPress={() => {
-                    setGrado(g);
-                    setGradoOpen(false);
-                  }}
-                >
-                  <Text
+              <ScrollView
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
+                {GRADOS.map((g) => (
+                  <TouchableOpacity
+                    key={g}
                     style={[
-                      styles.dropdownItemTexto,
-                      grado === g && styles.dropdownItemTextoSelected,
+                      styles.dropdownItem,
+                      grado === g && styles.dropdownItemSelected,
                     ]}
+                    onPress={() => {
+                      setGrado(g);
+                      setGradoOpen(false);
+                    }}
                   >
-                    {g}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.dropdownItemTexto,
+                        grado === g && styles.dropdownItemTextoSelected,
+                      ]}
+                    >
+                      {g}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           )}
         </View>
@@ -345,6 +350,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     elevation: 4,
     overflow: "hidden",
+    maxHeight: 200,
   },
   dropdownItem: {
     paddingHorizontal: 16,
