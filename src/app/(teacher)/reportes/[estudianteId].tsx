@@ -35,13 +35,6 @@ const NIVEL_ALERTA_CONFIG: Record<string, { color: string; fondo: string }> = {
   prioritario: { color: Colors.rojoAlerta, fondo: "#FFEBEB" },
 };
 
-const TENDENCIA_PRUEBA = [
-  { semana: "Sem 5", valor: 0.7 },
-  { semana: "Sem 6", valor: 0.55 },
-  { semana: "Sem 7", valor: 0.4 },
-  { semana: "Sem 8", valor: 0.3 },
-];
-
 function obtenerColorNivel(nivel: string): string {
   const colores: Record<string, string> = {
     estable: Colors.verdePrincipal,
@@ -93,7 +86,6 @@ export default function ReporteIndividualScreen() {
   const [tendencia, setTendencia] = useState<any[]>([]);
 
   useEffect(() => {
-    console.log("Cargando reporte para estudianteId:", estudianteId);
     if (estudianteId && session?.user) cargarDatos();
   }, [estudianteId, session]);
 
@@ -115,9 +107,6 @@ export default function ReporteIndividualScreen() {
         obtenerIndicadoresEstudiante(estudianteId),
         obtenerTendenciaEstudiante(estudianteId),
       ]);
-      console.log("Indicadores recibidos:", JSON.stringify(indicadoresData));
-
-      console.log("Total indicadores:", indicadoresData?.length);
 
       setPerfil(perfilData);
       setActividadesCompletadas(completadas);
@@ -125,7 +114,6 @@ export default function ReporteIndividualScreen() {
       setTextoObservacion(observacionData?.texto || "");
       setPerfilDocente(perfilDocenteData);
 
-      // Procesar indicadores reales
       const indicadoresPorArea = indicadoresData
         .filter((i: any) => i.area !== null)
         .map((i: any) => ({
@@ -202,7 +190,10 @@ export default function ReporteIndividualScreen() {
               color: ind.color,
             }))
           : [],
-        tendencia: TENDENCIA_PRUEBA,
+        tendencia: tendencia.map((t) => ({
+          semana: t.semana,
+          valor: t.valor,
+        })),
         observacion: textoObservacion,
         nombreDocente: perfilDocente?.nombre_completo || "Docente",
         fechaReporte: new Date().toLocaleDateString("es-CO", {
@@ -356,6 +347,7 @@ export default function ReporteIndividualScreen() {
         </View>
       ) : null}
 
+      {/* TENDENCIA */}
       <View style={styles.seccion}>
         <Text style={styles.seccionTitulo}>
           TENDENCIA ÚLTIMAS {tendencia.length} SEMANAS
