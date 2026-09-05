@@ -3,13 +3,15 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { useState } from "react";
+import { supabase } from "../lib/supabase";
 import { iniciarSesionConGoogleNativo } from "../service/auth.service";
 import { useAuthStore } from "../store/authStore";
 
 const WEB_CLIENT_ID =
   "780674740973-rfmogdirib3qaoo768gob3l6p5qdbrfq.apps.googleusercontent.com";
+const DOMINIO_PERMITIDO = "@ietirafaelnaviaron.edu.co";
+const INSTITUCION = "Rafael Navia Varon";
 
-// Configurar Google Sign-In una sola vez
 GoogleSignin.configure({
   webClientId: WEB_CLIENT_ID,
   offlineAccess: false,
@@ -34,7 +36,18 @@ export function useGoogleAuth(
       await GoogleSignin.signOut();
 
       const userInfo = await GoogleSignin.signIn();
-      console.log("Google Sign-In exitoso:", userInfo.data?.user?.email);
+      const email = userInfo.data?.user?.email || "";
+      console.log("Google Sign-In exitoso:", email);
+
+      // 1. Validar dominio
+      if (!email.endsWith(DOMINIO_PERMITIDO)) {
+        await GoogleSignin.signOut();
+        setIsGoogleAuth(false);
+        onError(
+          `Solo se permiten correos institucionales (${DOMINIO_PERMITIDO}). Tu correo ${email} no está autorizado.`,
+        );
+        return;
+      }
 
       const idToken = userInfo.data?.idToken;
       if (!idToken) {
@@ -44,10 +57,27 @@ export function useGoogleAuth(
       const data = await iniciarSesionConGoogleNativo(idToken);
       console.log("Supabase session:", !!data.session);
 
-      // Liberamos el flag
+      // 2. Asignar institución fija si el perfil no la tiene
+      if (data.session) {
+        const { data: perfil } = await supabase
+          .from("profiles")
+          .select("institucion, role")
+          .eq("id", data.session.user.id)
+          .single();
+
+        if (!perfil?.institucion) {
+          await supabase
+            .from("profiles")
+            .update({
+              institucion: INSTITUCION,
+              role: "estudiante",
+            })
+            .eq("id", data.session.user.id);
+        }
+      }
+
       setIsGoogleAuth(false);
 
-      // Forzamos la actualización del store con la sesión nueva
       if (data.session) {
         const {
           setSession,
