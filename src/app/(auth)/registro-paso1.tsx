@@ -19,6 +19,7 @@ import { Colors } from "../../constants/Colors";
 export default function RegistroPaso1Screen() {
   const router = useRouter();
   const [nombreCompleto, setNombreCompleto] = useState("");
+  const [apellido, setApellido] = useState("");
   const [email, setEmail] = useState("");
   const [fotoUri, setFotoUri] = useState<string | null>(null);
 
@@ -47,6 +48,10 @@ export default function RegistroPaso1Screen() {
       Alert.alert("Campo requerido", "Por favor ingresa tu nombre completo.");
       return;
     }
+    if (!apellido.trim()) {
+      Alert.alert("Campo requerido", "Por favor ingresa tu nombre completo.");
+      return;
+    }
     if (!email.trim()) {
       Alert.alert(
         "Campo requerido",
@@ -68,6 +73,7 @@ export default function RegistroPaso1Screen() {
       pathname: "/(auth)/registro-paso2",
       params: {
         nombreCompleto: nombreCompleto.trim(),
+        apellido: apellido.trim(),
         email: emailCompleto,
         fotoUri: fotoUri || "",
       },
@@ -136,6 +142,17 @@ export default function RegistroPaso1Screen() {
             autoCapitalize="words"
             value={nombreCompleto}
             onChangeText={setNombreCompleto}
+          />
+        </View>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Apellido</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Tu apellido"
+            placeholderTextColor={Colors.grisMedio}
+            autoCapitalize="words"
+            value={apellido}
+            onChangeText={setApellido}
           />
         </View>
 

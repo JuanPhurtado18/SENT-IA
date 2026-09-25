@@ -41,8 +41,9 @@ const INSTITUCION = "Rafael Navia Varon";
 
 export default function RegistroPaso2Screen() {
   const router = useRouter();
-  const { nombreCompleto, email, fotoUri } = useLocalSearchParams<{
+  const { nombreCompleto, apellido, email, fotoUri } = useLocalSearchParams<{
     nombreCompleto: string;
+    apellido: string;
     email: string;
     fotoUri: string;
   }>();
@@ -80,10 +81,11 @@ export default function RegistroPaso2Screen() {
     setIsRegistering(true);
 
     try {
+      const nombreCompletoFinal = `${nombreCompleto.trim()} ${apellido.trim()}`;
       await registrarEstudiante(
         email,
         password,
-        nombreCompleto,
+        nombreCompletoFinal,
         INSTITUCION,
         grado,
         fotoUri || undefined,
