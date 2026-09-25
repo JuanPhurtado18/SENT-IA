@@ -66,6 +66,16 @@ export default function LoginScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={24}
+            color={Colors.grisOscuro}
+          />
+        </TouchableOpacity>
         <Image
           source={require("../../../assets/images/logo.png")}
           style={styles.logoImagen}
