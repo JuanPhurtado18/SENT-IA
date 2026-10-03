@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 
-const CLOUDFLARE_WORKER_URL = "https://nvidia-proxy.sentia2807.workers.dev";
+const CLOUDFLARE_WORKER_URL = "https://nvidia-proxy.sentia28.workers.dev";
 
 export async function procesarActividad(
   usuarioId: string,

@@ -3,7 +3,7 @@ export interface Env {
 }
 
 const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
-const MODELO = 'meta/llama-3.1-8b-instruct';
+const MODELO = 'openai/gpt-oss-20b';
 
 const OPCIONES_PUNTAJE: Record<string, number> = {
 	A: 100,
@@ -150,6 +150,7 @@ Genera un resumen conciso (máximo 100 palabras) que:
 4. Use lenguaje profesional pero accesible
 No incluyas diagnósticos clínicos.`;
 
+			console.log('Llamando a NVIDIA con modelo:', MODELO);
 			const nvidiaResponse = await fetch(NVIDIA_API_URL, {
 				method: 'POST',
 				headers: {
@@ -164,10 +165,11 @@ No incluyas diagnósticos clínicos.`;
 					],
 					temperature: 0.3,
 					top_p: 1,
-					max_tokens: 300,
+					max_tokens: 150,
 					stream: false,
 				}),
 			});
+			console.log('NVIDIA response status:', nvidiaResponse.status);
 
 			if (!nvidiaResponse.ok) {
 				const errorText = await nvidiaResponse.text();
@@ -178,7 +180,9 @@ No incluyas diagnósticos clínicos.`;
 			}
 
 			const nvidiaData = (await nvidiaResponse.json()) as any;
-			const resumenIA = nvidiaData.choices?.[0]?.message?.content ?? '';
+			console.log('NVIDIA choices count:', nvidiaData.choices?.length);
+			const resumenIA = nvidiaData.choices?.[0]?.message?.content || nvidiaData.choices?.[0]?.message?.reasoning_content || '';
+			console.log('Resumen generado (primeros 100 chars):', resumenIA.substring(0, 100));
 
 			return new Response(
 				JSON.stringify({
