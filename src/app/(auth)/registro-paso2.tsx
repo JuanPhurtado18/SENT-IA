@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import TerminosModal from "../../components/ui/TerminosModal";
 import { Colors } from "../../constants/Colors";
 import { cerrarSesion, registrarEstudiante } from "../../service/auth.service";
 import { useAuthStore } from "../../store/authStore";
@@ -66,8 +67,17 @@ export default function RegistroPaso2Screen() {
   const [gradoOpen, setGradoOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { setIsRegistering } = useAuthStore();
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [showTerminos, setShowTerminos] = useState(false);
 
   async function handleRegistrar() {
+    if (!aceptaTerminos) {
+      Alert.alert(
+        "Términos requeridos",
+        "Debes aceptar los términos y condiciones para crear tu cuenta.",
+      );
+      return;
+    }
     if (!password || !confirmPassword || !grado) {
       Alert.alert("Campos requeridos", "Por favor completa todos los campos.");
       return;
@@ -247,6 +257,38 @@ export default function RegistroPaso2Screen() {
             </View>
           )}
         </View>
+        {/* CHECKBOX TÉRMINOS */}
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={() => setAceptaTerminos(!aceptaTerminos)}
+          activeOpacity={0.7}
+        >
+          <View
+            style={[styles.checkbox, aceptaTerminos && styles.checkboxActivo]}
+          >
+            {aceptaTerminos && (
+              <MaterialCommunityIcons
+                name="check"
+                size={14}
+                color={Colors.blanco}
+              />
+            )}
+          </View>
+          <Text style={styles.checkboxTexto}>
+            He leído y acepto los{" "}
+            <Text
+              style={styles.checkboxLink}
+              onPress={() => setShowTerminos(true)}
+            >
+              términos y condiciones
+            </Text>
+          </Text>
+        </TouchableOpacity>
+
+        <TerminosModal
+          visible={showTerminos}
+          onClose={() => setShowTerminos(false)}
+        />
 
         <TouchableOpacity
           style={[styles.buttonPrimary, isLoading && styles.buttonDisabled]}
@@ -393,5 +435,39 @@ const styles = StyleSheet.create({
     color: Colors.blanco,
     fontSize: 16,
     fontFamily: "Poppins_600SemiBold",
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: Colors.azulPrincipal,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+    flexShrink: 0,
+  },
+  checkboxActivo: {
+    backgroundColor: Colors.azulPrincipal,
+    borderColor: Colors.azulPrincipal,
+  },
+  checkboxTexto: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisOscuro,
+    lineHeight: 20,
+  },
+  checkboxLink: {
+    fontFamily: "Poppins_600SemiBold",
+    color: Colors.azulPrincipal,
+    textDecorationLine: "underline",
   },
 });

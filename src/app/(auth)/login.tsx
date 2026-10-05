@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import TerminosModal from "../../components/ui/TerminosModal";
 import { Colors } from "../../constants/Colors";
 import { useGoogleAuth } from "../../hooks/useGoogleAuth";
 import { iniciarSesion } from "../../service/auth.service";
@@ -24,6 +25,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showTerminos, setShowTerminos] = useState(false);
 
   async function handleLogin() {
     if (!email || !password) {
@@ -171,6 +173,19 @@ export default function LoginScreen() {
             </>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setShowTerminos(true)}
+          style={styles.terminosContainer}
+        >
+          <Text style={styles.terminosTexto}>
+            Ver términos y condiciones y créditos
+          </Text>
+        </TouchableOpacity>
+
+        <TerminosModal
+          visible={showTerminos}
+          onClose={() => setShowTerminos(false)}
+        />
 
         <View style={styles.registerLink}>
           <Text style={styles.registerText}>¿No tienes cuenta? </Text>
@@ -305,5 +320,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Poppins_600SemiBold",
     color: Colors.azulPrincipal,
+  },
+  terminosContainer: {
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  terminosTexto: {
+    fontSize: 12,
+    fontFamily: "Poppins_400Regular",
+    color: Colors.grisMedio,
+    textDecorationLine: "underline",
   },
 });
