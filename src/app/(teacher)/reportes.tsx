@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
     backgroundColor: Colors.fondoApp,
-    paddingTop: 56,
+    paddingTop: 0,
   },
   header: {
     paddingHorizontal: 20,

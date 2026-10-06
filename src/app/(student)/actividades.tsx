@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { obtenerTodasLasActividades } from "../../service/actividades.service";
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 20,
-    paddingTop: 56,
+    paddingTop: 0,
     paddingBottom: 32,
     gap: 20,
   },

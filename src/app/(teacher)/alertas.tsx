@@ -327,7 +327,7 @@ export default function AlertasScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1, backgroundColor: Colors.fondoApp, paddingTop: 56 },
+  wrapper: { flex: 1, backgroundColor: Colors.fondoApp, paddingTop: 0 },
   header: { paddingHorizontal: 20, marginBottom: 16, gap: 12 },
   titulo: {
     fontSize: 24,

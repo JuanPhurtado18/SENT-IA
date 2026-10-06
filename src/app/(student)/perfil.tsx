@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import CambiarPasswordModal from "../../components/student/CambiarPasswordModal";
 import EditarPerfilModal from "../../components/student/EditarPerfilModal";
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 20,
-    paddingTop: 56,
+    paddingTop: 0,
     paddingBottom: 40,
     gap: 20,
   },

@@ -9,7 +9,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { obtenerTodosLosEstudiantes } from "../../service/docente.service";
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
     backgroundColor: Colors.fondoApp,
-    paddingTop: 56,
+    paddingTop: 0,
   },
   header: {
     paddingHorizontal: 20,

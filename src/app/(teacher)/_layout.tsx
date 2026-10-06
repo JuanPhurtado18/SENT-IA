@@ -1,7 +1,20 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Image, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Colors } from "../../constants/Colors";
+
+function HeaderLogo() {
+  return (
+    <View style={styles.headerLogoContainer}>
+      <Image
+        source={require("../../../assets/images/logo.png")}
+        style={styles.headerLogo}
+        resizeMode="contain"
+      />
+    </View>
+  );
+}
 
 export default function TeacherLayout() {
   const insets = useSafeAreaInsets();
@@ -10,7 +23,20 @@ export default function TeacherLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        headerTitle: () => <HeaderLogo />,
+
+        headerStyle: {
+          backgroundColor: Colors.blanco,
+          height: 80,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
+        },
+
+        headerShadowVisible: false,
+
+        headerTitleAlign: "left",
         tabBarActiveTintColor: Colors.azulPrincipal,
         tabBarInactiveTintColor: Colors.grisMedio,
         tabBarStyle: {
@@ -79,7 +105,17 @@ export default function TeacherLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="reportes/[estudianteId]" options={{ href: null }} />
+      <Tabs.Screen
+        name="reportes/[estudianteId]"
+        options={{ href: null, headerShown: false }}
+      />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  headerLogo: {
+    width: 85,
+    height: 85,
+  },
+});
