@@ -132,7 +132,7 @@ Tus análisis son confidenciales, solo para docentes y orientadores.
 Escribes en español, de forma clara, empática y profesional.
 Nunca mencionas al estudiante por nombre.`;
 
-			const promptUsuario = `Analiza las respuestas de un estudiante de ${grado ?? 'secundaria'} y genera un resumen para el docente orientador.
+			const promptUsuario = `Analiza las respuestas de un estudiante de ${grado ?? 'secundaria'} y genera un resumen detallado para el docente orientador.
 
 INDICADORES:
 ${Object.entries(indicadoresPorArea)
@@ -143,12 +143,11 @@ ${Object.entries(indicadoresPorArea)
 RESPUESTAS:
 ${contextoPorArea}
 
-Genera un resumen conciso (máximo 100 palabras) que:
-1. Identifique áreas de mayor preocupación
-2. Destaque aspectos positivos si los hay
-3. Sugiera al docente qué apoyo podría ser útil
-4. Use lenguaje profesional pero accesible
-No incluyas diagnósticos clínicos.`;
+Genera un análisis detallado (150  palabras) que incluya:
+1. Resumen general del estado emocional del estudiante
+2. Análisis de cada área con mayor preocupación explicando qué revelan las respuestas
+3. Señales de alerta si las hay
+Usa lenguaje profesional, empático y accesible. No incluyas diagnósticos clínicos.`;
 
 			console.log('Llamando a NVIDIA con modelo:', MODELO);
 			const nvidiaResponse = await fetch(NVIDIA_API_URL, {
@@ -165,7 +164,7 @@ No incluyas diagnósticos clínicos.`;
 					],
 					temperature: 0.3,
 					top_p: 1,
-					max_tokens: 150,
+					max_tokens: 200,
 					stream: false,
 				}),
 			});
