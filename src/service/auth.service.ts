@@ -6,6 +6,21 @@ export async function iniciarSesion(email: string, password: string) {
     password,
   });
   if (error) throw error;
+
+  // Verificar si el perfil está bloqueado
+  const { data: perfil } = await supabase
+    .from("profiles")
+    .select("bloqueado, role")
+    .eq("id", data.user.id)
+    .single();
+
+  if (perfil?.bloqueado) {
+    await supabase.auth.signOut();
+    throw new Error(
+      "Tu cuenta ha sido bloqueada. Contacta al administrador de la institución.",
+    );
+  }
+
   return data;
 }
 

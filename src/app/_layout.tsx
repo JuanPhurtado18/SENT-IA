@@ -76,7 +76,7 @@ export default function RootLayout() {
       isRegistering ||
       isRecuperandoPassword ||
       isGoogleAuth ||
-      !splashTerminado // 👈 espera al splash
+      !splashTerminado
     )
       return;
 
@@ -85,7 +85,9 @@ export default function RootLayout() {
     if (!session && !inAuthGroup) {
       router.replace("/(auth)/bienvenida");
     } else if (session && role && inAuthGroup) {
-      if (role === "docente") {
+      if (role === "admin") {
+        router.replace("/(admin)/dashboard");
+      } else if (role === "docente") {
         router.replace("/(teacher)/dashboard");
       } else {
         router.replace("/(student)");
@@ -124,6 +126,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(student)" />
           <Stack.Screen name="(teacher)" />
+          <Stack.Screen name="(admin)" />
         </Stack>
       )}
     </SafeAreaProvider>
