@@ -1,15 +1,15 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Colors } from "../../constants/Colors";
 import { crearDocente } from "../../service/admin.service";
@@ -20,7 +20,7 @@ interface Props {
   onCreado: () => void;
 }
 
-const DOMINIO = "@ietirafaelnaviaron.edu.co";
+const DOMINIO = "@ietirafaelnaviavaron.edu.co";
 
 export default function AgregarDocenteModal({
   visible,

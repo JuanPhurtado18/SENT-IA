@@ -27,7 +27,7 @@ export default function StudentLayout() {
         headerTitle: () => <HeaderLogo />,
 
         headerStyle: {
-          backgroundColor: Colors.blanco,
+          backgroundColor: Colors.fondoApp,
           height: 80,
           elevation: 0,
           shadowOpacity: 0,
@@ -40,7 +40,7 @@ export default function StudentLayout() {
         tabBarActiveTintColor: Colors.azulPrincipal,
         tabBarInactiveTintColor: Colors.grisMedio,
         tabBarStyle: {
-          backgroundColor: Colors.blanco,
+          backgroundColor: Colors.fondoApp,
           borderTopWidth: 1,
           borderTopColor: Colors.azulClaro,
           paddingBottom,

@@ -9,7 +9,7 @@ import { useAuthStore } from "../store/authStore";
 
 const WEB_CLIENT_ID =
   "780674740973-rfmogdirib3qaoo768gob3l6p5qdbrfq.apps.googleusercontent.com";
-const DOMINIO_PERMITIDO = "@ietirafaelnaviaron.edu.co";
+const DOMINIO_PERMITIDO = "@ietirafaelnaviavaron.edu.co";
 const INSTITUCION = "Rafael Navia Varon";
 
 GoogleSignin.configure({

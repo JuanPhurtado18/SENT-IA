@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
-const DOMINIO = "@ietirafaelnaviaron.edu.co";
+const DOMINIO = "@ietirafaelnaviavaron.edu.co";
 const INSTITUCION = "Rafael Navia Varon";
 
 Deno.serve(async (req) => {

@@ -67,7 +67,7 @@ export default function RegistroPaso1Screen() {
       return;
     }
 
-    const emailCompleto = `${email.trim().toLowerCase()}@ietirafaelnaviaron.edu.co`;
+    const emailCompleto = `${email.trim().toLowerCase()}@ietirafaelnaviavaron.edu.co`;
 
     router.push({
       pathname: "/(auth)/registro-paso2",
@@ -169,7 +169,9 @@ export default function RegistroPaso1Screen() {
               value={email}
               onChangeText={setEmail}
             />
-            <Text style={styles.emailDominio}>@ietirafaelnaviaron.edu.co</Text>
+            <Text style={styles.emailDominio}>
+              @ietirafaelnaviavaron.edu.co
+            </Text>
           </View>
         </View>
 
