@@ -3,7 +3,7 @@
     "name": "SENT-IA",
     "slug": "sent-ia",
     "owner": "juanpabloh18",
-    "version": "1.4.14",
+    "version": "1.4.15",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "sentia",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.sentia.app",
-      "versionCode": 1,
+      "versionCode": 40,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/logo.png",
@@ -21,7 +21,8 @@
         "monochromeImage": "./assets/images/logo.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": [
+      "permissions": [],
+      "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA",
@@ -65,7 +66,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "SENT-IA necesita acceso a tu galería para que puedas agregar una foto de perfil."
+          "photosPermission": "SENT-IA necesita acceso a tu galería para que puedas agregar una foto de perfil.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ],
       "expo-web-browser"

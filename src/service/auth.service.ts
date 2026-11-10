@@ -241,3 +241,9 @@ export async function iniciarSesionConGoogleNativo(idToken: string) {
   if (error) throw error;
   return data;
 }
+
+export async function eliminarCuenta() {
+  const { error } = await supabase.functions.invoke("eliminar-cuenta");
+  if (error) throw error;
+  await supabase.auth.signOut();
+}

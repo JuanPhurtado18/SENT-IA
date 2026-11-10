@@ -18,7 +18,11 @@ import {
   contarActividadesCompletadas,
   obtenerHistorialActividades,
 } from "../../service/actividades.service";
-import { cerrarSesion, obtenerPerfil } from "../../service/auth.service";
+import {
+  cerrarSesion,
+  eliminarCuenta,
+  obtenerPerfil,
+} from "../../service/auth.service";
 import { useAuthStore } from "../../store/authStore";
 
 export default function PerfilScreen() {
@@ -83,6 +87,30 @@ export default function PerfilScreen() {
   }
 
   const inicialNombre = perfil?.nombre_completo?.[0]?.toUpperCase() || "E";
+
+  function handleEliminarCuenta() {
+    Alert.alert(
+      "Eliminar cuenta",
+      "Se borrarán permanentemente tu cuenta y todos tus datos (respuestas, indicadores y foto). Esta acción no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await eliminarCuenta();
+            } catch (e: any) {
+              Alert.alert(
+                "Error",
+                e.message || "No se pudo eliminar la cuenta.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <>
@@ -262,6 +290,39 @@ export default function PerfilScreen() {
                 Cerrar sesión
               </Text>
             </View>
+
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={20}
+              color={Colors.rojoAlerta}
+            />
+          </TouchableOpacity>
+          <View style={styles.separador} />
+          {/* ELIMINAR CUENTA */}
+          <TouchableOpacity
+            style={styles.opcionItem}
+            onPress={handleEliminarCuenta}
+            activeOpacity={0.7}
+          >
+            <View style={styles.opcionLeft}>
+              <View
+                style={[
+                  styles.opcionIconCircle,
+                  { backgroundColor: "#FFEBEB" },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="delete-outline"
+                  size={18}
+                  color={Colors.rojoAlerta}
+                />
+              </View>
+
+              <Text style={[styles.opcionTexto, { color: Colors.rojoAlerta }]}>
+                Eliminar cuenta
+              </Text>
+            </View>
+
             <MaterialCommunityIcons
               name="chevron-right"
               size={20}
